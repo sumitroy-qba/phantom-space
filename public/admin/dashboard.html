@@ -288,8 +288,8 @@
                     </div>
                 </div>
 
-                <!-- Portfolio KPIs -->
-                <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">Portfolio KPIs</h3>
+                <!-- Portfolio Metrics -->
+                <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">Portfolio Metrics</h3>
                 <div class="kpi-grid" id="kpiGrid">
                     <!-- KPI cards will be dynamically generated -->
                 </div>
@@ -656,7 +656,7 @@
         }
 
         function formatKPIName(name) {
-            return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            return name.replace(/^kpi_/i, '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
         }
 
         function displayEmptyState() {
