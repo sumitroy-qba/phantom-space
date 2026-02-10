@@ -74,8 +74,23 @@
       <main class="main-content">
         <p class="text-secondary">Visual comparison and ranking of startup risk assessments</p>
 
-        <!-- Overall Risk Score Chart -->
+        <!-- Ranking Table -->
         <div class="card mt-3 fade-in">
+          <div class="card-header">
+            <h3 class="card-title">🏆 Ranking by Overall Risk Score</h3>
+          </div>
+          <div class="card-body">
+            <div id="ranking-container">
+              <div class="text-center" style="padding: 2rem;">
+                <div class="spinner" style="margin: 0 auto;"></div>
+                <p class="mt-2">Loading rankings...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overall Risk Score Chart -->
+        <div class="card mt-4 fade-in">
           <div class="card-header">
             <h3 class="card-title">📊 Overall Risk Score Comparison</h3>
           </div>
@@ -107,20 +122,7 @@
           </div>
         </div>
 
-        <!-- Ranking Table -->
-        <div class="card mt-4 fade-in">
-          <div class="card-header">
-            <h3 class="card-title">🏆 Ranking by Overall Risk Score</h3>
-          </div>
-          <div class="card-body">
-            <div id="ranking-container">
-              <div class="text-center" style="padding: 2rem;">
-                <div class="spinner" style="margin: 0 auto;"></div>
-                <p class="mt-2">Loading rankings...</p>
-              </div>
-            </div>
-          </div>
-        </div>
+
 
         <!-- KPI Table -->
         <div class="card mt-4 fade-in">
