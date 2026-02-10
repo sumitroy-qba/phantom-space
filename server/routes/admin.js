@@ -58,9 +58,17 @@ router.get('/api/startup-users', requireAdmin, (req, res) => {
       ic.consumed_at,
       ic.is_valid,
       (SELECT COUNT(*) FROM survey_submissions WHERE startup_user_id = su.id) as submission_count,
-      (SELECT COUNT(*) FROM survey_drafts WHERE startup_user_id = su.id) as draft_count
+      (SELECT COUNT(*) FROM survey_drafts WHERE startup_user_id = su.id) as draft_count,
+      ss.total_risk_score,
+      ss.risk_band,
+      ss.submitted_at as submission_date
     FROM startup_users su
     LEFT JOIN invite_codes ic ON su.id = ic.startup_user_id AND ic.is_valid = 1
+    LEFT JOIN (
+        SELECT startup_user_id, total_risk_score, risk_band, submitted_at, MAX(id)
+        FROM survey_submissions
+        GROUP BY startup_user_id
+    ) ss ON su.id = ss.startup_user_id
     ORDER BY su.created_at DESC
   `;
 

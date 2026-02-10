@@ -335,11 +335,22 @@
                     const statusMap = {
                         'invited': 'Invited',
                         'active': 'Active',
-                        'submitted': 'Submitted',
+                        'submitted': 'Assessment Completed', // DB status is 'Assessment Completed' usually, or 'Submitted'
                         'disabled': 'Disabled'
                     };
-                    const targetStatus = statusMap[currentFilter];
-                    filteredUsers = users.filter(u => u.status === targetStatus);
+
+                    // Specific handling for 'Submitted' - check status OR if they have submission data
+                    if (currentFilter === 'submitted') {
+                        filteredUsers = users.filter(u =>
+                            u.status === 'Assessment Completed' ||
+                            u.status === 'Submitted' ||
+                            (u.total_risk_score !== null && u.total_risk_score !== undefined) ||
+                            (u.submission_count && u.submission_count > 0)
+                        );
+                    } else {
+                        const targetStatus = statusMap[currentFilter];
+                        filteredUsers = users.filter(u => u.status === targetStatus);
+                    }
                 }
 
                 console.log(`Displaying ${filteredUsers.length} users (filter: ${currentFilter})`);
@@ -349,41 +360,79 @@
                     return;
                 }
 
-                const table = `
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Email</th>
-              <th>Startup Name</th>
-              <th>Status</th>
-              <th>Created</th>
-              <th>Last Login</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${filteredUsers.map(user => `
-              <tr>
-                <td><strong>${user.email}</strong></td>
-                <td>${user.startup_name || '-'}</td>
-                <td>${getStatusBadge(user.status)}</td>
-                <td>${new Date(user.created_at).toLocaleDateString()}</td>
-                <td>${user.last_login_at ? new Date(user.last_login_at).toLocaleDateString() : '-'}</td>
-                <td>
-                  <div class="flex gap-1">
-                    <button class="btn btn-sm btn-secondary" onclick="resendInvite(${user.id})">Resend</button>
-                    <button class="btn btn-sm btn-secondary" onclick="toggleStatus(${user.id}, '${user.status}')">
-                      ${user.status === 'Disabled' ? 'Enable' : 'Disable'}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
+                // If filter is 'submitted', show risk columns
+                if (currentFilter === 'submitted') {
+                    const table = `
+                        <table class="table">
+                          <thead>
+                            <tr>
+                              <th>Startup Name</th>
+                              <th>Email</th>
+                              <th>Risk Score</th>
+                              <th>Risk Band</th>
+                              <th>Submitted At</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            ${filteredUsers.map(user => {
+                        const riskBand = user.risk_band || (user.total_risk_score <= 33 ? 'Low' : user.total_risk_score <= 66 ? 'Medium' : 'High');
+                        const badgeClass = (riskBand || '').toLowerCase().includes('low') ? 'low' : (riskBand || '').toLowerCase().includes('medium') ? 'medium' : 'high';
 
-                container.innerHTML = table;
+                        return `
+                                  <tr>
+                                    <td><strong>${user.startup_name || '-'}</strong></td>
+                                    <td>${user.email}</td>
+                                    <td style="font-weight: 700;">${user.total_risk_score || '-'}</td>
+                                    <td><span class="risk-badge ${badgeClass}">${riskBand || 'N/A'}</span></td>
+                                    <td>${user.submission_date ? new Date(user.submission_date).toLocaleDateString() : '-'}</td>
+                                    <td>
+                                      <a href="/admin/submission-details.html?id=${user.id}" class="btn btn-sm btn-primary">View</a>
+                                    </td>
+                                  </tr>
+                                `;
+                    }).join('')}
+                          </tbody>
+                        </table>
+                      `;
+                    container.innerHTML = table;
+                } else {
+                    // Standard view
+                    const table = `
+                        <table class="table">
+                          <thead>
+                            <tr>
+                              <th>Email</th>
+                              <th>Startup Name</th>
+                              <th>Status</th>
+                              <th>Created</th>
+                              <th>Last Login</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            ${filteredUsers.map(user => `
+                              <tr>
+                                <td><strong>${user.email}</strong></td>
+                                <td>${user.startup_name || '-'}</td>
+                                <td>${getStatusBadge(user.status)}</td>
+                                <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                                <td>${user.last_login_at ? new Date(user.last_login_at).toLocaleDateString() : '-'}</td>
+                                <td>
+                                  <div class="flex gap-1">
+                                    <button class="btn btn-sm btn-secondary" onclick="resendInvite(${user.id})">Resend</button>
+                                    <button class="btn btn-sm btn-secondary" onclick="toggleStatus(${user.id}, '${user.status}')">
+                                      ${user.status === 'Disabled' ? 'Enable' : 'Disable'}
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            `).join('')}
+                          </tbody>
+                        </table>
+                      `;
+                    container.innerHTML = table;
+                }
             }
 
             function getStatusBadge(status) {

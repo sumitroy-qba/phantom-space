@@ -434,7 +434,8 @@
         // Load dashboard data
         async function loadDashboardData() {
             try {
-                const submissionsRes = await fetch('/admin/api/submissions');
+                // Add timestamp to prevent caching
+                const submissionsRes = await fetch('/admin/api/submissions?t=' + new Date().getTime());
                 const submissions = await submissionsRes.json();
 
                 console.log('Submissions:', submissions);
