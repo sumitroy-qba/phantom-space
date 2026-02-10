@@ -9,207 +9,254 @@
 </head>
 
 <body>
-    <nav class="navbar">
-        <div class="container navbar-content">
-            <div class="navbar-brand">Startup Assessment Platform</div>
-            <ul class="navbar-nav">
-                <li><a href="/admin/dashboard.html" class="navbar-link">Dashboard</a></li>
-                <li><a href="/admin/startup-users.html" class="navbar-link">Startup Users</a></li>
-                <li><a href="/admin/submissions.html" class="navbar-link">Submissions</a></li>
-                <li><a href="/admin/compare.html" class="navbar-link">Compare & Rank</a></li>
-                <li><a href="/admin/survey-builder.html" class="navbar-link">Survey Builder</a></li>
-                <li><span class="navbar-link" id="username-display"></span></li>
-                <li><button class="btn btn-sm btn-secondary" id="logout-btn">Logout</button></li>
-            </ul>
-        </div>
-    </nav>
-
-    <div class="container mt-4">
-        <div class="flex justify-between items-center mb-3">
-            <div>
-                <h1>Survey Builder</h1>
-                <p class="text-secondary">Manage survey questions, weights, and scoring rules</p>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="/admin/dashboard.html" class="sidebar-logo">
+                    <span>📊</span>
+                    <span>Risk Assessment</span>
+                </a>
             </div>
-            <a href="/admin/survey-preview.html" class="btn btn-primary">📋 Preview Survey</a>
-        </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Main</div>
+                    <a href="/admin/dashboard.html" class="sidebar-link">
+                        <span class="sidebar-icon">🏠</span>
+                        <span>Overview</span>
+                    </a>
+                    <a href="/admin/startup-users.html" class="sidebar-link">
+                        <span class="sidebar-icon">👥</span>
+                        <span>Startup Users</span>
+                    </a>
+                    <a href="/admin/submissions.html" class="sidebar-link">
+                        <span class="sidebar-icon">📄</span>
+                        <span>Submissions</span>
+                    </a>
+                    <a href="/admin/compare.html" class="sidebar-link">
+                        <span class="sidebar-icon">📊</span>
+                        <span>Compare & Rank</span>
+                    </a>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Configuration</div>
+                    <a href="/admin/survey-builder.html" class="sidebar-link active">
+                        <span class="sidebar-icon">⚙️</span>
+                        <span>Survey Builder</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
 
-        <div class="alert alert-info mt-3">
-            <strong>Active Survey Version:</strong> Version 1 (Default)
-        </div>
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <div class="card mt-3 fade-in">
-            <div class="card-header">
-                <h3 class="card-title">Questions</h3>
-            </div>
-            <div class="card-body">
-                <div id="questions-container">
-                    <div class="text-center" style="padding: 2rem;">
-                        <div class="spinner" style="margin: 0 auto;"></div>
-                        <p class="mt-2">Loading questions...</p>
+        <!-- Main Content -->
+        <div class="main-content-wrapper">
+            <!-- Top Navbar -->
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+                    <h2 style="margin: 0; font-size: 1.5rem; color: var(--text-primary);">Survey Builder</h2>
+                </div>
+                <div class="navbar-right">
+                    <div class="user-menu">
+                        <div class="user-menu-btn">
+                            <span id="username-display">Admin</span>
+                            <button class="btn btn-sm btn-secondary" id="logout-btn"
+                                style="margin-left: 0.5rem;">Logout</button>
+                        </div>
                     </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="flex justify-between items-center mb-3">
+                    <div>
+                        <p class="text-secondary">Manage survey questions, weights, and scoring rules</p>
+                    </div>
+                    <a href="/admin/survey-preview.html" class="btn btn-primary">📋 Preview Survey</a>
+                </div>
+
+                <div class="alert alert-info mt-3">
+                    <strong>Active Survey Version:</strong> Version 1 (Default)
+                </div>
+
+                <div class="card mt-3 fade-in">
+                    <div class="card-header">
+                        <h3 class="card-title">Questions</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="questions-container">
+                            <div class="text-center" style="padding: 2rem;">
+                                <div class="spinner" style="margin: 0 auto;"></div>
+                                <p class="mt-2">Loading questions...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+
+        <!-- Edit Question Modal -->
+        <div id="edit-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Edit Question</h3>
+                    <button class="modal-close" onclick="closeEditModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-form">
+                        <input type="hidden" id="edit-question-id">
+
+                        <div class="form-group">
+                            <label class="form-label">Question Label</label>
+                            <textarea id="edit-label" class="form-textarea" rows="3" required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Weight</label>
+                            <input type="number" id="edit-weight" class="form-input" step="0.1" min="0" max="10"
+                                required>
+                            <p class="form-help">Scoring weight (0-10)</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input type="checkbox" id="edit-required">
+                                Required Field
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Question Type</label>
+                            <input type="text" id="edit-type" class="form-input" readonly>
+                        </div>
+
+                        <div id="alert-container"></div>
+
+                        <div class="flex justify-between mt-4">
+                            <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Edit Question Modal -->
-    <div id="edit-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Edit Question</h3>
-                <button class="modal-close" onclick="closeEditModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="edit-form">
-                    <input type="hidden" id="edit-question-id">
-
-                    <div class="form-group">
-                        <label class="form-label">Question Label</label>
-                        <textarea id="edit-label" class="form-textarea" rows="3" required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Weight</label>
-                        <input type="number" id="edit-weight" class="form-input" step="0.1" min="0" max="10" required>
-                        <p class="form-help">Scoring weight (0-10)</p>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            <input type="checkbox" id="edit-required">
-                            Required Field
-                        </label>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Question Type</label>
-                        <input type="text" id="edit-type" class="form-input" readonly>
-                    </div>
-
-                    <div id="alert-container"></div>
-
-                    <div class="flex justify-between mt-4">
-                        <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <style>
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: var(--bg-primary);
-            border-radius: var(--radius-lg);
-            width: 90%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .modal-header {
-            padding: var(--spacing-lg);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-header h3 {
-            margin: 0;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 2rem;
-            cursor: pointer;
-            color: var(--text-secondary);
-            line-height: 1;
-        }
-
-        .modal-close:hover {
-            color: var(--text-primary);
-        }
-
-        .modal-body {
-            padding: var(--spacing-lg);
-        }
-    </style>
-
-    <script>
-        let allQuestions = [];
-
-        fetch('/admin/api/check-session')
-            .then(res => res.json())
-            .then(data => {
-                if (!data.authenticated) {
-                    window.location.href = '/admin/login.html';
-                } else {
-                    document.getElementById('username-display').textContent = data.username;
-                    loadQuestions();
-                }
-            });
-
-        document.getElementById('logout-btn').addEventListener('click', async () => {
-            await fetch('/admin/api/logout', { method: 'POST' });
-            window.location.href = '/admin/login.html';
-        });
-
-        async function loadQuestions() {
-            try {
-                const res = await fetch('/admin/api/survey-version/active');
-                const version = await res.json();
-                allQuestions = version.questions;
-                displayQuestions(allQuestions);
-            } catch (error) {
-                document.getElementById('questions-container').innerHTML =
-                    '<p class="text-center text-danger">Failed to load questions</p>';
+        <style>
+            .modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
             }
-        }
 
-        function displayQuestions(questions) {
-            const container = document.getElementById('questions-container');
+            .modal-content {
+                background: var(--bg-primary);
+                border-radius: var(--radius-lg);
+                width: 90%;
+                max-width: 600px;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: var(--shadow-lg);
+            }
 
-            // Group by section
-            const sections = {};
-            questions.forEach(q => {
-                if (!sections[q.section]) sections[q.section] = [];
-                sections[q.section].push(q);
+            .modal-header {
+                padding: var(--spacing-lg);
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .modal-header h3 {
+                margin: 0;
+            }
+
+            .modal-close {
+                background: none;
+                border: none;
+                font-size: 2rem;
+                cursor: pointer;
+                color: var(--text-secondary);
+                line-height: 1;
+            }
+
+            .modal-close:hover {
+                color: var(--text-primary);
+            }
+
+            .modal-body {
+                padding: var(--spacing-lg);
+            }
+        </style>
+
+        <script>
+            let allQuestions = [];
+
+            fetch('/admin/api/check-session')
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.authenticated) {
+                        window.location.href = '/admin/login.html';
+                    } else {
+                        document.getElementById('username-display').textContent = data.username;
+                        loadQuestions();
+                    }
+                });
+
+            document.getElementById('logout-btn').addEventListener('click', async () => {
+                await fetch('/admin/api/logout', { method: 'POST' });
+                window.location.href = '/admin/login.html';
             });
 
-            const sectionNames = {
-                'A': 'Basic Info',
-                'B': 'Offering & Product',
-                'C': 'Market & Geography',
-                'D': 'Regulatory & Compliance',
-                'E': 'IP (Patents/Trademarks)',
-                'F': 'Revenue Model & Unit Economics',
-                'G': 'Market Sizing',
-                'H': 'Revenue & Growth',
-                'I': 'Customer Contracts',
-                'J': '3-Year Expense Plans',
-                'K': 'Exit Strategy',
-                'L': 'Self-Reported Risks'
-            };
+            async function loadQuestions() {
+                try {
+                    const res = await fetch('/admin/api/survey-version/active');
+                    const version = await res.json();
+                    allQuestions = version.questions;
+                    displayQuestions(allQuestions);
+                } catch (error) {
+                    document.getElementById('questions-container').innerHTML =
+                        '<p class="text-center text-danger">Failed to load questions</p>';
+                }
+            }
 
-            let html = '';
-            Object.keys(sections).sort().forEach(section => {
-                html += `
+            function displayQuestions(questions) {
+                const container = document.getElementById('questions-container');
+
+                // Group by section
+                const sections = {};
+                questions.forEach(q => {
+                    if (!sections[q.section]) sections[q.section] = [];
+                    sections[q.section].push(q);
+                });
+
+                const sectionNames = {
+                    'A': 'Basic Info',
+                    'B': 'Offering & Product',
+                    'C': 'Market & Geography',
+                    'D': 'Regulatory & Compliance',
+                    'E': 'IP (Patents/Trademarks)',
+                    'F': 'Revenue Model & Unit Economics',
+                    'G': 'Market Sizing',
+                    'H': 'Revenue & Growth',
+                    'I': 'Customer Contracts',
+                    'J': '3-Year Expense Plans',
+                    'K': 'Exit Strategy',
+                    'L': 'Self-Reported Risks'
+                };
+
+                let html = '';
+                Object.keys(sections).sort().forEach(section => {
+                    html += `
           <div class="mb-4">
             <h4 style="color: var(--primary); margin-bottom: 1rem;">
               Section ${section}: ${sectionNames[section]}
@@ -240,67 +287,67 @@
             </table>
           </div>
         `;
-            });
-
-            container.innerHTML = html;
-        }
-
-        window.editQuestion = function (id) {
-            const question = allQuestions.find(q => q.id === id);
-            if (!question) return;
-
-            // Populate form
-            document.getElementById('edit-question-id').value = question.id;
-            document.getElementById('edit-label').value = question.label;
-            document.getElementById('edit-weight').value = question.weight;
-            document.getElementById('edit-required').checked = question.required;
-            document.getElementById('edit-type').value = question.type;
-
-            // Show modal
-            document.getElementById('edit-modal').style.display = 'flex';
-        };
-
-        window.closeEditModal = function () {
-            document.getElementById('edit-modal').style.display = 'none';
-            document.getElementById('alert-container').innerHTML = '';
-        };
-
-        document.getElementById('edit-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const questionId = document.getElementById('edit-question-id').value;
-            const data = {
-                label: document.getElementById('edit-label').value,
-                weight: parseFloat(document.getElementById('edit-weight').value),
-                required: document.getElementById('edit-required').checked
-            };
-
-            try {
-                const res = await fetch(`/admin/api/questions/${questionId}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
                 });
 
-                if (res.ok) {
-                    showAlert('Question updated successfully!', 'success');
-                    setTimeout(() => {
-                        closeEditModal();
-                        loadQuestions(); // Reload questions
-                    }, 1500);
-                } else {
-                    showAlert('Failed to update question', 'danger');
-                }
-            } catch (error) {
-                showAlert('Error updating question', 'danger');
+                container.innerHTML = html;
             }
-        });
 
-        function showAlert(message, type) {
-            const container = document.getElementById('alert-container');
-            container.innerHTML = `<div class="alert alert-${type} fade-in">${message}</div>`;
-        }
-    </script>
+            window.editQuestion = function (id) {
+                const question = allQuestions.find(q => q.id === id);
+                if (!question) return;
+
+                // Populate form
+                document.getElementById('edit-question-id').value = question.id;
+                document.getElementById('edit-label').value = question.label;
+                document.getElementById('edit-weight').value = question.weight;
+                document.getElementById('edit-required').checked = question.required;
+                document.getElementById('edit-type').value = question.type;
+
+                // Show modal
+                document.getElementById('edit-modal').style.display = 'flex';
+            };
+
+            window.closeEditModal = function () {
+                document.getElementById('edit-modal').style.display = 'none';
+                document.getElementById('alert-container').innerHTML = '';
+            };
+
+            document.getElementById('edit-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const questionId = document.getElementById('edit-question-id').value;
+                const data = {
+                    label: document.getElementById('edit-label').value,
+                    weight: parseFloat(document.getElementById('edit-weight').value),
+                    required: document.getElementById('edit-required').checked
+                };
+
+                try {
+                    const res = await fetch(`/admin/api/questions/${questionId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (res.ok) {
+                        showAlert('Question updated successfully!', 'success');
+                        setTimeout(() => {
+                            closeEditModal();
+                            loadQuestions(); // Reload questions
+                        }, 1500);
+                    } else {
+                        showAlert('Failed to update question', 'danger');
+                    }
+                } catch (error) {
+                    showAlert('Error updating question', 'danger');
+                }
+            });
+
+            function showAlert(message, type) {
+                const container = document.getElementById('alert-container');
+                container.innerHTML = `<div class="alert alert-${type} fade-in">${message}</div>`;
+            }
+        </script>
 </body>
 
 </html>

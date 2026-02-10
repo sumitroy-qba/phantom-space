@@ -9,36 +9,114 @@
 </head>
 
 <body>
-    <nav class="navbar">
-        <div class="container navbar-content">
-            <div class="navbar-brand">Startup Assessment Platform</div>
-            <ul class="navbar-nav">
-                <li><a href="/admin/dashboard.html" class="navbar-link">Dashboard</a></li>
-                <li><a href="/admin/startup-users.html" class="navbar-link">Startup Users</a></li>
-                <li><a href="/admin/submissions.html" class="navbar-link">Submissions</a></li>
-                <li><a href="/admin/compare.html" class="navbar-link">Compare & Rank</a></li>
-                <li><a href="/admin/survey-builder.html" class="navbar-link">Survey Builder</a></li>
-                <li><span class="navbar-link" id="username-display"></span></li>
-                <li><button class="btn btn-sm btn-secondary" id="logout-btn">Logout</button></li>
-            </ul>
-        </div>
-    </nav>
-
-    <div class="container mt-4">
-        <h1>Submissions</h1>
-        <p class="text-secondary">View and analyze startup risk assessments</p>
-
-        <div class="card mt-3 fade-in">
-            <div id="submissions-container">
-                <div class="text-center" style="padding: 2rem;">
-                    <div class="spinner" style="margin: 0 auto;"></div>
-                    <p class="mt-2">Loading submissions...</p>
-                </div>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="/admin/dashboard.html" class="sidebar-logo">
+                    <span>📊</span>
+                    <span>Risk Assessment</span>
+                </a>
             </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Main</div>
+                    <a href="/admin/dashboard.html" class="sidebar-link">
+                        <span class="sidebar-icon">🏠</span>
+                        <span>Overview</span>
+                    </a>
+                    <a href="/admin/startup-users.html" class="sidebar-link">
+                        <span class="sidebar-icon">👥</span>
+                        <span>Startup Users</span>
+                    </a>
+                    <a href="/admin/submissions.html" class="sidebar-link active">
+                        <span class="sidebar-icon">📄</span>
+                        <span>Submissions</span>
+                    </a>
+                    <a href="/admin/compare.html" class="sidebar-link">
+                        <span class="sidebar-icon">📊</span>
+                        <span>Compare & Rank</span>
+                    </a>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Configuration</div>
+                    <a href="/admin/survey-builder.html" class="sidebar-link">
+                        <span class="sidebar-icon">⚙️</span>
+                        <span>Survey Builder</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <div class="main-content-wrapper">
+            <!-- Top Navbar -->
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+                    <h2 style="margin: 0; font-size: 1.5rem; color: var(--text-primary);">Submissions</h2>
+                </div>
+                <div class="navbar-right">
+                    <div class="user-menu">
+                        <div class="user-menu-btn">
+                            <span id="username-display">Admin</span>
+                            <button class="btn btn-sm btn-secondary" id="logout-btn"
+                                style="margin-left: 0.5rem;">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <p class="text-secondary mb-3">View and analyze all submitted risk assessments</p>
+
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Startup Name</th>
+                                    <th>Submitted By</th>
+                                    <th>Risk Score</th>
+                                    <th>Risk Band</th>
+                                    <th>Submitted At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="submissions-table">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 2rem;">Loading submissions...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
         </div>
     </div>
 
     <script>
+        // Sidebar toggle for mobile
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('active');
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+        });
+
+        // Check authentication
         fetch('/admin/api/check-session')
             .then(res => res.json())
             .then(data => {
@@ -50,6 +128,7 @@
                 }
             });
 
+        // Logout
         document.getElementById('logout-btn').addEventListener('click', async () => {
             await fetch('/admin/api/logout', { method: 'POST' });
             window.location.href = '/admin/login.html';
@@ -57,67 +136,44 @@
 
         async function loadSubmissions() {
             try {
-                const res = await fetch('/admin/api/submissions');
-                const submissions = await res.json();
+                const response = await fetch('/admin/api/submissions');
+                const submissions = await response.json();
+
                 displaySubmissions(submissions);
             } catch (error) {
-                document.getElementById('submissions-container').innerHTML =
-                    '<p class="text-center text-danger">Failed to load submissions</p>';
+                console.error('Error loading submissions:', error);
+                document.getElementById('submissions-table').innerHTML =
+                    '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--danger);">Error loading submissions</td></tr>';
             }
         }
 
         function displaySubmissions(submissions) {
-            const container = document.getElementById('submissions-container');
+            const tbody = document.getElementById('submissions-table');
 
             if (submissions.length === 0) {
-                container.innerHTML = '<p class="text-center text-secondary" style="padding: 2rem;">No submissions yet</p>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">No submissions found</td></tr>';
                 return;
             }
 
-            const table = `
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Startup Name</th>
-              <th>Email</th>
-              <th>Risk Score</th>
-              <th>Risk Band</th>
-              <th>Submitted</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${submissions.map(sub => `
-              <tr>
-                <td><strong>${sub.startup_name || 'N/A'}</strong></td>
-                <td>${sub.email}</td>
-                <td><strong>${sub.total_risk_score.toFixed(1)}</strong></td>
-                <td>${getRiskBadge(sub.risk_band)}</td>
-                <td>${new Date(sub.submitted_at).toLocaleDateString()}</td>
-                <td>
-                  <button class="btn btn-sm btn-primary" onclick="viewDetails(${sub.id})">View Details</button>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
+            tbody.innerHTML = submissions.map(sub => {
+                const riskBand = sub.total_risk_score <= 33 ? 'Low' : sub.total_risk_score <= 66 ? 'Medium' : 'High';
+                const badgeClass = riskBand.toLowerCase();
+                const date = new Date(sub.submitted_at).toLocaleString();
 
-            container.innerHTML = table;
+                return `
+                    <tr>
+                        <td><strong>${sub.startup_name || 'Unknown'}</strong></td>
+                        <td>${sub.email || 'N/A'}</td>
+                        <td style="font-weight: 700; font-size: 1.125rem;">${sub.total_risk_score}</td>
+                        <td><span class="risk-badge ${badgeClass}">${riskBand}</span></td>
+                        <td>${date}</td>
+                        <td>
+                            <a href="/admin/submission-details.html?id=${sub.id}" class="btn btn-sm btn-primary">View Details</a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
-
-        function getRiskBadge(band) {
-            const badges = {
-                'Low Risk': 'badge-success',
-                'Medium Risk': 'badge-warning',
-                'High Risk': 'badge-danger'
-            };
-            return `<span class="badge ${badges[band] || 'badge-secondary'}">${band}</span>`;
-        }
-
-        window.viewDetails = function (id) {
-            window.location.href = `/admin/submission-details.html?id=${id}`;
-        };
     </script>
 </body>
 

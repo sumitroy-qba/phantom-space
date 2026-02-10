@@ -10,347 +10,392 @@
 </head>
 
 <body>
-  <nav class="navbar">
-    <div class="container navbar-content">
-      <div class="navbar-brand">Startup Assessment Platform</div>
-      <ul class="navbar-nav">
-        <li><a href="/admin/dashboard.html" class="navbar-link">Dashboard</a></li>
-        <li><a href="/admin/startup-users.html" class="navbar-link">Startup Users</a></li>
-        <li><a href="/admin/submissions.html" class="navbar-link">Submissions</a></li>
-        <li><a href="/admin/compare.html" class="navbar-link">Compare & Rank</a></li>
-        <li><a href="/admin/survey-builder.html" class="navbar-link">Survey Builder</a></li>
-        <li><span class="navbar-link" id="username-display"></span></li>
-        <li><button class="btn btn-sm btn-secondary" id="logout-btn">Logout</button></li>
-      </ul>
-    </div>
-  </nav>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="/admin/dashboard.html" class="sidebar-logo">
+          <span>📊</span>
+          <span>Risk Assessment</span>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Main</div>
+          <a href="/admin/dashboard.html" class="sidebar-link">
+            <span class="sidebar-icon">🏠</span>
+            <span>Overview</span>
+          </a>
+          <a href="/admin/startup-users.html" class="sidebar-link">
+            <span class="sidebar-icon">👥</span>
+            <span>Startup Users</span>
+          </a>
+          <a href="/admin/submissions.html" class="sidebar-link">
+            <span class="sidebar-icon">📄</span>
+            <span>Submissions</span>
+          </a>
+          <a href="/admin/compare.html" class="sidebar-link active">
+            <span class="sidebar-icon">📊</span>
+            <span>Compare & Rank</span>
+          </a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Configuration</div>
+          <a href="/admin/survey-builder.html" class="sidebar-link">
+            <span class="sidebar-icon">⚙️</span>
+            <span>Survey Builder</span>
+          </a>
+        </div>
+      </nav>
+    </aside>
 
-  <div class="container mt-4">
-    <h1>Compare & Rank Startups</h1>
-    <p class="text-secondary">Visual comparison and ranking of startup risk assessments</p>
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- Overall Risk Score Chart -->
-    <div class="card mt-3 fade-in">
-      <div class="card-header">
-        <h3 class="card-title">📊 Overall Risk Score Comparison</h3>
-      </div>
-      <div class="card-body">
-        <p class="text-secondary mb-3">Lower scores indicate lower risk (better investment candidates)</p>
-        <canvas id="riskScoreChart" style="max-height: 400px;"></canvas>
-      </div>
-    </div>
-
-    <!-- KPI Radar Chart -->
-    <div class="card mt-4 fade-in">
-      <div class="card-header">
-        <h3 class="card-title">🎯 KPI Radar Comparison</h3>
-      </div>
-      <div class="card-body">
-        <p class="text-secondary mb-3">Multi-dimensional view of key performance indicators</p>
-        <canvas id="kpiRadarChart" style="max-height: 500px;"></canvas>
-      </div>
-    </div>
-
-    <!-- Section Scores Comparison -->
-    <div class="card mt-4 fade-in">
-      <div class="card-header">
-        <h3 class="card-title">📈 Section Risk Scores</h3>
-      </div>
-      <div class="card-body">
-        <p class="text-secondary mb-3">Detailed breakdown by assessment section</p>
-        <canvas id="sectionScoresChart" style="max-height: 500px;"></canvas>
-      </div>
-    </div>
-
-    <!-- Ranking Table -->
-    <div class="card mt-4 fade-in">
-      <div class="card-header">
-        <h3 class="card-title">🏆 Ranking by Overall Risk Score</h3>
-      </div>
-      <div class="card-body">
-        <div id="ranking-container">
-          <div class="text-center" style="padding: 2rem;">
-            <div class="spinner" style="margin: 0 auto;"></div>
-            <p class="mt-2">Loading rankings...</p>
+    <!-- Main Content -->
+    <div class="main-content-wrapper">
+      <!-- Top Navbar -->
+      <header class="top-navbar">
+        <div class="navbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+          <h2 style="margin: 0; font-size: 1.5rem; color: var(--text-primary);">Compare & Rank</h2>
+        </div>
+        <div class="navbar-right">
+          <div class="user-menu">
+            <div class="user-menu-btn">
+              <span id="username-display">Admin</span>
+              <button class="btn btn-sm btn-secondary" id="logout-btn" style="margin-left: 0.5rem;">Logout</button>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </header>
 
-    <!-- KPI Table -->
-    <div class="card mt-4 fade-in">
-      <div class="card-header">
-        <h3 class="card-title">📋 KPI Detailed Comparison</h3>
-      </div>
-      <div class="card-body">
-        <div id="kpi-container">
-          <p class="text-secondary">Loading KPI data...</p>
+      <!-- Main Content -->
+      <main class="main-content">
+        <p class="text-secondary">Visual comparison and ranking of startup risk assessments</p>
+
+        <!-- Overall Risk Score Chart -->
+        <div class="card mt-3 fade-in">
+          <div class="card-header">
+            <h3 class="card-title">📊 Overall Risk Score Comparison</h3>
+          </div>
+          <div class="card-body">
+            <p class="text-secondary mb-3">Lower scores indicate lower risk (better investment candidates)</p>
+            <canvas id="riskScoreChart" style="max-height: 400px;"></canvas>
+          </div>
         </div>
-      </div>
+
+        <!-- KPI Radar Chart -->
+        <div class="card mt-4 fade-in">
+          <div class="card-header">
+            <h3 class="card-title">🎯 KPI Radar Comparison</h3>
+          </div>
+          <div class="card-body">
+            <p class="text-secondary mb-3">Multi-dimensional view of key performance indicators</p>
+            <canvas id="kpiRadarChart" style="max-height: 500px;"></canvas>
+          </div>
+        </div>
+
+        <!-- Section Scores Comparison -->
+        <div class="card mt-4 fade-in">
+          <div class="card-header">
+            <h3 class="card-title">📈 Section Risk Scores</h3>
+          </div>
+          <div class="card-body">
+            <p class="text-secondary mb-3">Detailed breakdown by assessment section</p>
+            <canvas id="sectionScoresChart" style="max-height: 500px;"></canvas>
+          </div>
+        </div>
+
+        <!-- Ranking Table -->
+        <div class="card mt-4 fade-in">
+          <div class="card-header">
+            <h3 class="card-title">🏆 Ranking by Overall Risk Score</h3>
+          </div>
+          <div class="card-body">
+            <div id="ranking-container">
+              <div class="text-center" style="padding: 2rem;">
+                <div class="spinner" style="margin: 0 auto;"></div>
+                <p class="mt-2">Loading rankings...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI Table -->
+        <div class="card mt-4 fade-in">
+          <div class="card-header">
+            <h3 class="card-title">📋 KPI Detailed Comparison</h3>
+          </div>
+          <div class="card-body">
+            <div id="kpi-container">
+              <p class="text-secondary">Loading KPI data...</p>
+            </div>
+          </div>
+        </div>
     </div>
-  </div>
 
-  <script>
-    let riskScoreChart, kpiRadarChart, sectionScoresChart;
+    <script>
+      let riskScoreChart, kpiRadarChart, sectionScoresChart;
 
-    fetch('/admin/api/check-session')
-      .then(res => res.json())
-      .then(data => {
-        if (!data.authenticated) {
-          window.location.href = '/admin/login.html';
-        } else {
-          document.getElementById('username-display').textContent = data.username;
-          loadRankings();
+      fetch('/admin/api/check-session')
+        .then(res => res.json())
+        .then(data => {
+          if (!data.authenticated) {
+            window.location.href = '/admin/login.html';
+          } else {
+            document.getElementById('username-display').textContent = data.username;
+            loadRankings();
+          }
+        });
+
+      document.getElementById('logout-btn').addEventListener('click', async () => {
+        await fetch('/admin/api/logout', { method: 'POST' });
+        window.location.href = '/admin/login.html';
+      });
+
+      async function loadRankings() {
+        try {
+          const res = await fetch('/admin/api/submissions');
+          const submissions = await res.json();
+
+          // Sort by risk score (ascending - lower is better)
+          submissions.sort((a, b) => a.total_risk_score - b.total_risk_score);
+
+          displayRankings(submissions);
+          displayKPIComparison(submissions);
+          createRiskScoreChart(submissions);
+          createKPIRadarChart(submissions);
+          createSectionScoresChart(submissions);
+        } catch (error) {
+          document.getElementById('ranking-container').innerHTML =
+            '<p class="text-center text-danger">Failed to load rankings</p>';
         }
-      });
-
-    document.getElementById('logout-btn').addEventListener('click', async () => {
-      await fetch('/admin/api/logout', { method: 'POST' });
-      window.location.href = '/admin/login.html';
-    });
-
-    async function loadRankings() {
-      try {
-        const res = await fetch('/admin/api/submissions');
-        const submissions = await res.json();
-
-        // Sort by risk score (ascending - lower is better)
-        submissions.sort((a, b) => a.total_risk_score - b.total_risk_score);
-
-        displayRankings(submissions);
-        displayKPIComparison(submissions);
-        createRiskScoreChart(submissions);
-        createKPIRadarChart(submissions);
-        createSectionScoresChart(submissions);
-      } catch (error) {
-        document.getElementById('ranking-container').innerHTML =
-          '<p class="text-center text-danger">Failed to load rankings</p>';
       }
-    }
 
-    function createRiskScoreChart(submissions) {
-      const ctx = document.getElementById('riskScoreChart').getContext('2d');
+      function createRiskScoreChart(submissions) {
+        const ctx = document.getElementById('riskScoreChart').getContext('2d');
 
-      // Destroy existing chart if it exists
-      if (riskScoreChart) riskScoreChart.destroy();
+        // Destroy existing chart if it exists
+        if (riskScoreChart) riskScoreChart.destroy();
 
-      const colors = submissions.map(sub => {
-        if (sub.risk_band === 'Low Risk') return 'rgba(16, 185, 129, 0.8)';
-        if (sub.risk_band === 'Medium Risk') return 'rgba(245, 158, 11, 0.8)';
-        return 'rgba(239, 68, 68, 0.8)';
-      });
+        const colors = submissions.map(sub => {
+          if (sub.risk_band === 'Low Risk') return 'rgba(16, 185, 129, 0.8)';
+          if (sub.risk_band === 'Medium Risk') return 'rgba(245, 158, 11, 0.8)';
+          return 'rgba(239, 68, 68, 0.8)';
+        });
 
-      riskScoreChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: submissions.map(sub => sub.startup_name || sub.email),
-          datasets: [{
-            label: 'Overall Risk Score',
-            data: submissions.map(sub => sub.total_risk_score),
-            backgroundColor: colors,
-            borderColor: colors.map(c => c.replace('0.8', '1')),
-            borderWidth: 2,
-            borderRadius: 6
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          plugins: {
-            legend: {
-              display: false
+        riskScoreChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: submissions.map(sub => sub.startup_name || sub.email),
+            datasets: [{
+              label: 'Overall Risk Score',
+              data: submissions.map(sub => sub.total_risk_score),
+              backgroundColor: colors,
+              borderColor: colors.map(c => c.replace('0.8', '1')),
+              borderWidth: 2,
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    const sub = submissions[context.dataIndex];
+                    return [
+                      `Risk Score: ${context.parsed.y.toFixed(2)}`,
+                      `Risk Band: ${sub.risk_band}`,
+                      `Decision: ${sub.decision}`
+                    ];
+                  }
+                }
+              }
             },
-            tooltip: {
-              callbacks: {
-                label: function (context) {
-                  const sub = submissions[context.dataIndex];
-                  return [
-                    `Risk Score: ${context.parsed.y.toFixed(2)}`,
-                    `Risk Band: ${sub.risk_band}`,
-                    `Decision: ${sub.decision}`
-                  ];
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100,
+                title: {
+                  display: true,
+                  text: 'Risk Score (Lower is Better)'
+                }
+              },
+              x: {
+                ticks: {
+                  maxRotation: 45,
+                  minRotation: 45
                 }
               }
             }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              max: 100,
-              title: {
-                display: true,
-                text: 'Risk Score (Lower is Better)'
-              }
-            },
-            x: {
-              ticks: {
-                maxRotation: 45,
-                minRotation: 45
-              }
-            }
           }
-        }
-      });
-    }
+        });
+      }
 
-    function createKPIRadarChart(submissions) {
-      const ctx = document.getElementById('kpiRadarChart').getContext('2d');
+      function createKPIRadarChart(submissions) {
+        const ctx = document.getElementById('kpiRadarChart').getContext('2d');
 
-      if (kpiRadarChart) kpiRadarChart.destroy();
+        if (kpiRadarChart) kpiRadarChart.destroy();
 
-      const kpiNames = {
-        kpi_regulatory: 'Regulatory Risk',
-        kpi_unit_economics: 'Unit Economics',
-        kpi_growth_stability: 'Growth Stability',
-        kpi_customer_concentration: 'Customer Concentration',
-        kpi_execution_complexity: 'Execution Complexity',
-        kpi_exit_clarity: 'Exit Clarity'
-      };
+        const kpiNames = {
+          kpi_regulatory: 'Regulatory Risk',
+          kpi_unit_economics: 'Unit Economics',
+          kpi_growth_stability: 'Growth Stability',
+          kpi_customer_concentration: 'Customer Concentration',
+          kpi_execution_complexity: 'Execution Complexity',
+          kpi_exit_clarity: 'Exit Clarity'
+        };
 
-      const colors = [
-        'rgba(37, 99, 235, 0.6)',
-        'rgba(139, 92, 246, 0.6)',
-        'rgba(16, 185, 129, 0.6)',
-        'rgba(245, 158, 11, 0.6)',
-        'rgba(239, 68, 68, 0.6)',
-        'rgba(236, 72, 153, 0.6)'
-      ];
+        const colors = [
+          'rgba(37, 99, 235, 0.6)',
+          'rgba(139, 92, 246, 0.6)',
+          'rgba(16, 185, 129, 0.6)',
+          'rgba(245, 158, 11, 0.6)',
+          'rgba(239, 68, 68, 0.6)',
+          'rgba(236, 72, 153, 0.6)'
+        ];
 
-      const datasets = submissions.slice(0, 5).map((sub, index) => ({
-        label: `#${index + 1} - ${sub.startup_name || sub.email}`,
-        data: Object.keys(kpiNames).map(key => sub.kpi_scores[key] || 0),
-        backgroundColor: colors[index],
-        borderColor: colors[index].replace('0.6', '1'),
-        borderWidth: 2,
-        pointBackgroundColor: colors[index].replace('0.6', '1'),
-        pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: colors[index].replace('0.6', '1')
-      }));
+        const datasets = submissions.slice(0, 5).map((sub, index) => ({
+          label: `#${index + 1} - ${sub.startup_name || sub.email}`,
+          data: Object.keys(kpiNames).map(key => sub.kpi_scores[key] || 0),
+          backgroundColor: colors[index],
+          borderColor: colors[index].replace('0.6', '1'),
+          borderWidth: 2,
+          pointBackgroundColor: colors[index].replace('0.6', '1'),
+          pointBorderColor: '#fff',
+          pointHoverBackgroundColor: '#fff',
+          pointHoverBorderColor: colors[index].replace('0.6', '1')
+        }));
 
-      kpiRadarChart = new Chart(ctx, {
-        type: 'radar',
-        data: {
-          labels: Object.values(kpiNames),
-          datasets: datasets
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          plugins: {
-            legend: {
-              position: 'top',
+        kpiRadarChart = new Chart(ctx, {
+          type: 'radar',
+          data: {
+            labels: Object.values(kpiNames),
+            datasets: datasets
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                position: 'top',
+              },
+              tooltip: {
+                callbacks: {
+                  title: function (context) {
+                    const datasetIndex = context[0].datasetIndex;
+                    const sub = submissions[datasetIndex];
+                    return `#${datasetIndex + 1} - ${sub.startup_name || sub.email}`;
+                  },
+                  label: function (context) {
+                    return `${context.label}: ${context.parsed.r.toFixed(1)}`;
+                  },
+                  afterLabel: function (context) {
+                    const datasetIndex = context.datasetIndex;
+                    const sub = submissions[datasetIndex];
+                    return `Overall Risk Score: ${sub.total_risk_score.toFixed(1)}`;
+                  }
+                }
+              }
             },
-            tooltip: {
-              callbacks: {
-                title: function (context) {
-                  const datasetIndex = context[0].datasetIndex;
-                  const sub = submissions[datasetIndex];
-                  return `#${datasetIndex + 1} - ${sub.startup_name || sub.email}`;
-                },
-                label: function (context) {
-                  return `${context.label}: ${context.parsed.r.toFixed(1)}`;
-                },
-                afterLabel: function (context) {
-                  const datasetIndex = context.datasetIndex;
-                  const sub = submissions[datasetIndex];
-                  return `Overall Risk Score: ${sub.total_risk_score.toFixed(1)}`;
+            scales: {
+              r: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                  stepSize: 20
                 }
               }
             }
-          },
-          scales: {
-            r: {
-              beginAtZero: true,
-              max: 100,
-              ticks: {
-                stepSize: 20
-              }
-            }
           }
-        }
-      });
-    }
-
-    function createSectionScoresChart(submissions) {
-      const ctx = document.getElementById('sectionScoresChart').getContext('2d');
-
-      if (sectionScoresChart) sectionScoresChart.destroy();
-
-      const sectionNames = {
-        'B': 'Offering & Product',
-        'C': 'Market & Geography',
-        'D': 'Regulatory',
-        'E': 'IP',
-        'F': 'Unit Economics',
-        'G': 'Market Sizing',
-        'H': 'Revenue & Growth',
-        'I': 'Customer Contracts',
-        'J': 'Expense Plans',
-        'K': 'Exit Strategy',
-        'L': 'Self-Reported Risks'
-      };
-
-      const colors = [
-        'rgba(37, 99, 235, 0.7)',
-        'rgba(139, 92, 246, 0.7)',
-        'rgba(16, 185, 129, 0.7)',
-        'rgba(245, 158, 11, 0.7)',
-        'rgba(239, 68, 68, 0.7)'
-      ];
-
-      const datasets = submissions.slice(0, 5).map((sub, index) => ({
-        label: `#${index + 1} - ${sub.startup_name || sub.email}`,
-        data: Object.keys(sectionNames).map(key => sub.section_scores[key] || 0),
-        backgroundColor: colors[index],
-        borderColor: colors[index].replace('0.7', '1'),
-        borderWidth: 2,
-        borderRadius: 4
-      }));
-
-      sectionScoresChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: Object.values(sectionNames),
-          datasets: datasets
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          plugins: {
-            legend: {
-              position: 'top',
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              max: 100,
-              title: {
-                display: true,
-                text: 'Section Risk Score'
-              }
-            },
-            x: {
-              ticks: {
-                maxRotation: 45,
-                minRotation: 45
-              }
-            }
-          }
-        }
-      });
-    }
-
-    function displayRankings(submissions) {
-      const container = document.getElementById('ranking-container');
-
-      if (submissions.length === 0) {
-        container.innerHTML = '<p class="text-center text-secondary" style="padding: 2rem;">No submissions to rank yet</p>';
-        return;
+        });
       }
 
-      const table = `
+      function createSectionScoresChart(submissions) {
+        const ctx = document.getElementById('sectionScoresChart').getContext('2d');
+
+        if (sectionScoresChart) sectionScoresChart.destroy();
+
+        const sectionNames = {
+          'B': 'Offering & Product',
+          'C': 'Market & Geography',
+          'D': 'Regulatory',
+          'E': 'IP',
+          'F': 'Unit Economics',
+          'G': 'Market Sizing',
+          'H': 'Revenue & Growth',
+          'I': 'Customer Contracts',
+          'J': 'Expense Plans',
+          'K': 'Exit Strategy',
+          'L': 'Self-Reported Risks'
+        };
+
+        const colors = [
+          'rgba(37, 99, 235, 0.7)',
+          'rgba(139, 92, 246, 0.7)',
+          'rgba(16, 185, 129, 0.7)',
+          'rgba(245, 158, 11, 0.7)',
+          'rgba(239, 68, 68, 0.7)'
+        ];
+
+        const datasets = submissions.slice(0, 5).map((sub, index) => ({
+          label: `#${index + 1} - ${sub.startup_name || sub.email}`,
+          data: Object.keys(sectionNames).map(key => sub.section_scores[key] || 0),
+          backgroundColor: colors[index],
+          borderColor: colors[index].replace('0.7', '1'),
+          borderWidth: 2,
+          borderRadius: 4
+        }));
+
+        sectionScoresChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: Object.values(sectionNames),
+            datasets: datasets
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                position: 'top',
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100,
+                title: {
+                  display: true,
+                  text: 'Section Risk Score'
+                }
+              },
+              x: {
+                ticks: {
+                  maxRotation: 45,
+                  minRotation: 45
+                }
+              }
+            }
+          }
+        });
+      }
+
+      function displayRankings(submissions) {
+        const container = document.getElementById('ranking-container');
+
+        if (submissions.length === 0) {
+          container.innerHTML = '<p class="text-center text-secondary" style="padding: 2rem;">No submissions to rank yet</p>';
+          return;
+        }
+
+        const table = `
         <table class="table">
           <thead>
             <tr>
@@ -377,24 +422,24 @@
         </table>
       `;
 
-      container.innerHTML = table;
-    }
+        container.innerHTML = table;
+      }
 
-    function displayKPIComparison(submissions) {
-      const container = document.getElementById('kpi-container');
+      function displayKPIComparison(submissions) {
+        const container = document.getElementById('kpi-container');
 
-      if (submissions.length === 0) return;
+        if (submissions.length === 0) return;
 
-      const kpiNames = {
-        kpi_regulatory: 'Regulatory Risk',
-        kpi_unit_economics: 'Unit Economics',
-        kpi_growth_stability: 'Growth Stability',
-        kpi_customer_concentration: 'Customer Concentration',
-        kpi_execution_complexity: 'Execution Complexity',
-        kpi_exit_clarity: 'Exit Clarity'
-      };
+        const kpiNames = {
+          kpi_regulatory: 'Regulatory Risk',
+          kpi_unit_economics: 'Unit Economics',
+          kpi_growth_stability: 'Growth Stability',
+          kpi_customer_concentration: 'Customer Concentration',
+          kpi_execution_complexity: 'Execution Complexity',
+          kpi_exit_clarity: 'Exit Clarity'
+        };
 
-      const table = `
+        const table = `
         <table class="table">
           <thead>
             <tr>
@@ -404,8 +449,8 @@
           </thead>
           <tbody>
             ${submissions.map(sub => {
-        const kpis = sub.kpi_scores;
-        return `
+          const kpis = sub.kpi_scores;
+          return `
                 <tr>
                   <td><strong>${sub.startup_name || sub.email}</strong></td>
                   ${Object.keys(kpiNames).map(key => `
@@ -413,22 +458,42 @@
                   `).join('')}
                 </tr>
               `;
-      }).join('')}
+        }).join('')}
           </tbody>
         </table>
       `;
 
-      container.innerHTML = table;
-    }
+        container.innerHTML = table;
+      }
 
-    function getRiskBadge(band) {
-      const badges = {
-        'Low Risk': 'badge-success',
-        'Medium Risk': 'badge-warning',
-        'High Risk': 'badge-danger'
-      };
-      return `<span class="badge ${badges[band] || 'badge-secondary'}">${band}</span>`;
-    }
+      function getRiskBadge(band) {
+        const badges = {
+          'Low Risk': 'badge-success',
+          'Medium Risk': 'badge-warning',
+          'High Risk': 'badge-danger'
+        };
+        return `<span class="badge ${badges[band] || 'badge-secondary'}">${band}</span>`;
+      }
+    </script>
+    </main>
+  </div>
+  </div>
+
+  <script>
+    // Sidebar toggle for mobile
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      sidebarOverlay.classList.toggle('active');
+    });
+
+    sidebarOverlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      sidebarOverlay.classList.remove('active');
+    });
   </script>
 </body>
 

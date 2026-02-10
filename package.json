@@ -5,7 +5,14 @@
   "main": "server/app.js",
   "scripts": {
     "start": "node server/app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:admin": "playwright test tests/e2e/admin",
+    "test:startup": "playwright test tests/e2e/startup",
+    "test:scoring": "playwright test tests/e2e/startup/scoring-calculations.spec.js",
+    "test:compare": "playwright test tests/e2e/compare-rank",
+    "test:report": "playwright show-report"
   },
   "keywords": [
     "startup",

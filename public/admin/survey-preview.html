@@ -75,158 +75,207 @@
 </head>
 
 <body>
-    <nav class="navbar">
-        <div class="container navbar-content">
-            <div class="navbar-brand">Startup Assessment Platform</div>
-            <ul class="navbar-nav">
-                <li><a href="/admin/dashboard.html" class="navbar-link">Dashboard</a></li>
-                <li><a href="/admin/startup-users.html" class="navbar-link">Startup Users</a></li>
-                <li><a href="/admin/submissions.html" class="navbar-link">Submissions</a></li>
-                <li><a href="/admin/compare.html" class="navbar-link">Compare & Rank</a></li>
-                <li><a href="/admin/survey-builder.html" class="navbar-link">Survey Builder</a></li>
-                <li><span class="navbar-link" id="username-display"></span></li>
-                <li><button class="btn btn-sm btn-secondary" id="logout-btn">Logout</button></li>
-            </ul>
-        </div>
-    </nav>
-
-    <!-- Preview Badge -->
-    <div class="preview-badge">
-        📋 PREVIEW MODE - Read Only
-    </div>
-
-    <div class="container mt-4">
-        <div class="flex justify-between items-center mb-3">
-            <div>
-                <h1>Survey Preview</h1>
-                <p class="text-secondary">View the assessment form as startup users see it</p>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="/admin/dashboard.html" class="sidebar-logo">
+                    <span>📊</span>
+                    <span>Risk Assessment</span>
+                </a>
             </div>
-            <a href="/admin/survey-builder.html" class="btn btn-secondary">← Back to Survey Builder</a>
-        </div>
-
-        <div class="grid" style="grid-template-columns: 250px 1fr; gap: var(--spacing-lg);">
-            <!-- Section Navigation -->
-            <div>
-                <div class="section-nav">
-                    <h4 style="margin-bottom: 1rem;">Sections</h4>
-                    <div id="section-nav-container"></div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Main</div>
+                    <a href="/admin/dashboard.html" class="sidebar-link">
+                        <span class="sidebar-icon">🏠</span>
+                        <span>Overview</span>
+                    </a>
+                    <a href="/admin/startup-users.html" class="sidebar-link">
+                        <span class="sidebar-icon">👥</span>
+                        <span>Startup Users</span>
+                    </a>
+                    <a href="/admin/submissions.html" class="sidebar-link">
+                        <span class="sidebar-icon">📄</span>
+                        <span>Submissions</span>
+                    </a>
+                    <a href="/admin/compare.html" class="sidebar-link">
+                        <span class="sidebar-icon">📊</span>
+                        <span>Compare & Rank</span>
+                    </a>
                 </div>
-            </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Configuration</div>
+                    <a href="/admin/survey-builder.html" class="sidebar-link active">
+                        <span class="sidebar-icon">⚙️</span>
+                        <span>Survey Builder</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
 
-            <!-- Main Content -->
-            <div>
-                <div class="card fade-in">
-                    <div class="card-body">
-                        <div id="alert-container"></div>
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-                        <form id="preview-form">
-                            <!-- Sections will be dynamically loaded here -->
-                            <div id="sections-container"></div>
-
-                            <!-- Navigation Buttons -->
-                            <div class="flex justify-between mt-4"
-                                style="padding-top: 1rem; border-top: 1px solid var(--border);">
-                                <button type="button" class="btn btn-secondary" id="prev-btn" disabled>←
-                                    Previous</button>
-                                <button type="button" class="btn btn-primary" id="next-btn">Next →</button>
-                            </div>
-                        </form>
+        <!-- Main Content -->
+        <div class="main-content-wrapper">
+            <!-- Top Navbar -->
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+                    <h2 style="margin: 0; font-size: 1.5rem; color: var(--text-primary);">Survey Preview</h2>
+                </div>
+                <div class="navbar-right">
+                    <div class="user-menu">
+                        <div class="user-menu-btn">
+                            <span id="username-display">Admin</span>
+                            <button class="btn btn-sm btn-secondary" id="logout-btn"
+                                style="margin-left: 0.5rem;">Logout</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
+            </header>
 
-    <script>
-        let currentSection = 0;
-        let sections = [];
-        let questions = [];
+            <!-- Main Content -->
+            <main class="main-content">
 
-        // Check authentication
-        fetch('/admin/api/check-session')
-            .then(res => res.json())
-            .then(data => {
-                if (!data.authenticated) {
-                    window.location.href = '/admin/login.html';
-                } else {
-                    document.getElementById('username-display').textContent = data.username;
-                    loadSurvey();
-                }
-            });
+                <!-- Preview Badge -->
+                <div class="preview-badge">
+                    📋 PREVIEW MODE - Read Only
+                </div>
 
-        document.getElementById('logout-btn').addEventListener('click', async () => {
-            await fetch('/admin/api/logout', { method: 'POST' });
-            window.location.href = '/admin/login.html';
-        });
+                <div class="container mt-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <div>
+                            <h1>Survey Preview</h1>
+                            <p class="text-secondary">View the assessment form as startup users see it</p>
+                        </div>
+                        <a href="/admin/survey-builder.html" class="btn btn-secondary">← Back to Survey Builder</a>
+                    </div>
 
-        async function loadSurvey() {
-            try {
-                const res = await fetch('/admin/api/survey-version/active');
-                const survey = await res.json();
-                questions = survey.questions;
+                    <div class="grid" style="grid-template-columns: 250px 1fr; gap: var(--spacing-lg);">
+                        <!-- Section Navigation -->
+                        <div>
+                            <div class="section-nav">
+                                <h4 style="margin-bottom: 1rem;">Sections</h4>
+                                <div id="section-nav-container"></div>
+                            </div>
+                        </div>
 
-                // Group questions by section
-                const sectionMap = {};
-                questions.forEach(q => {
-                    if (!sectionMap[q.section]) {
-                        sectionMap[q.section] = [];
+                        <!-- Main Content -->
+                        <div>
+                            <div class="card fade-in">
+                                <div class="card-body">
+                                    <div id="alert-container"></div>
+
+                                    <form id="preview-form">
+                                        <!-- Sections will be dynamically loaded here -->
+                                        <div id="sections-container"></div>
+
+                                        <!-- Navigation Buttons -->
+                                        <div class="flex justify-between mt-4"
+                                            style="padding-top: 1rem; border-top: 1px solid var(--border);">
+                                            <button type="button" class="btn btn-secondary" id="prev-btn" disabled>←
+                                                Previous</button>
+                                            <button type="button" class="btn btn-primary" id="next-btn">Next →</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    let currentSection = 0;
+                    let sections = [];
+                    let questions = [];
+
+                    // Check authentication
+                    fetch('/admin/api/check-session')
+                        .then(res => res.json())
+                        .then(data => {
+                            if (!data.authenticated) {
+                                window.location.href = '/admin/login.html';
+                            } else {
+                                document.getElementById('username-display').textContent = data.username;
+                                loadSurvey();
+                            }
+                        });
+
+                    document.getElementById('logout-btn').addEventListener('click', async () => {
+                        await fetch('/admin/api/logout', { method: 'POST' });
+                        window.location.href = '/admin/login.html';
+                    });
+
+                    async function loadSurvey() {
+                        try {
+                            const res = await fetch('/admin/api/survey-version/active');
+                            const survey = await res.json();
+                            questions = survey.questions;
+
+                            // Group questions by section
+                            const sectionMap = {};
+                            questions.forEach(q => {
+                                if (!sectionMap[q.section]) {
+                                    sectionMap[q.section] = [];
+                                }
+                                sectionMap[q.section].push(q);
+                            });
+
+                            sections = Object.keys(sectionMap).sort().map(key => ({
+                                id: key,
+                                name: getSectionName(key),
+                                questions: sectionMap[key]
+                            }));
+
+                            renderSections();
+                            renderNavigation();
+                            showSection(0);
+                        } catch (error) {
+                            showAlert('Failed to load survey', 'danger');
+                        }
                     }
-                    sectionMap[q.section].push(q);
-                });
 
-                sections = Object.keys(sectionMap).sort().map(key => ({
-                    id: key,
-                    name: getSectionName(key),
-                    questions: sectionMap[key]
-                }));
+                    function getSectionName(section) {
+                        const names = {
+                            'A': 'Basic Info',
+                            'B': 'Offering & Product',
+                            'C': 'Market & Geography',
+                            'D': 'Regulatory & Compliance',
+                            'E': 'IP',
+                            'F': 'Unit Economics',
+                            'G': 'Market Sizing',
+                            'H': 'Revenue & Growth',
+                            'I': 'Customer Contracts',
+                            'J': 'Expense Plans',
+                            'K': 'Exit Strategy',
+                            'L': 'Self-Reported Risks'
+                        };
+                        return names[section] || section;
+                    }
 
-                renderSections();
-                renderNavigation();
-                showSection(0);
-            } catch (error) {
-                showAlert('Failed to load survey', 'danger');
-            }
-        }
+                    function renderSections() {
+                        const container = document.getElementById('sections-container');
 
-        function getSectionName(section) {
-            const names = {
-                'A': 'Basic Info',
-                'B': 'Offering & Product',
-                'C': 'Market & Geography',
-                'D': 'Regulatory & Compliance',
-                'E': 'IP',
-                'F': 'Unit Economics',
-                'G': 'Market Sizing',
-                'H': 'Revenue & Growth',
-                'I': 'Customer Contracts',
-                'J': 'Expense Plans',
-                'K': 'Exit Strategy',
-                'L': 'Self-Reported Risks'
-            };
-            return names[section] || section;
-        }
-
-        function renderSections() {
-            const container = document.getElementById('sections-container');
-
-            sections.forEach((section, index) => {
-                const sectionHtml = `
+                        sections.forEach((section, index) => {
+                            const sectionHtml = `
           <div class="section-content" id="section-${index}">
             <h2>${section.name}</h2>
             <p class="text-secondary mb-3">Section ${section.id}</p>
             ${section.questions.map(q => renderQuestion(q)).join('')}
           </div>
         `;
-                container.innerHTML += sectionHtml;
-            });
-        }
+                            container.innerHTML += sectionHtml;
+                        });
+                    }
 
-        function renderQuestion(q) {
-            const required = q.required ? 'required' : '';
-            const requiredLabel = q.required ? 'required' : '';
+                    function renderQuestion(q) {
+                        const required = q.required ? 'required' : '';
+                        const requiredLabel = q.required ? 'required' : '';
 
-            let inputHtml = '';
-            let metaTags = `
+                        let inputHtml = '';
+                        let metaTags = `
         <div class="question-meta">
           <span class="meta-tag">Type: ${q.type}</span>
           ${q.required ? '<span class="meta-tag" style="background: var(--danger); color: white;">Required</span>' : ''}
@@ -234,31 +283,31 @@
         </div>
       `;
 
-            switch (q.type) {
-                case 'text':
-                case 'url':
-                case 'number':
-                    inputHtml = `<input type="${q.type}" class="form-input" placeholder="Preview - No input allowed" disabled>`;
-                    break;
+                        switch (q.type) {
+                            case 'text':
+                            case 'url':
+                            case 'number':
+                                inputHtml = `<input type="${q.type}" class="form-input" placeholder="Preview - No input allowed" disabled>`;
+                                break;
 
-                case 'textarea':
-                    inputHtml = `<textarea class="form-textarea" placeholder="Preview - No input allowed" disabled></textarea>`;
-                    break;
+                            case 'textarea':
+                                inputHtml = `<textarea class="form-textarea" placeholder="Preview - No input allowed" disabled></textarea>`;
+                                break;
 
-                case 'dropdown':
-                case 'radio':
-                    const options = q.options || [];
-                    inputHtml = `
+                            case 'dropdown':
+                            case 'radio':
+                                const options = q.options || [];
+                                inputHtml = `
             <select class="form-select" disabled>
               <option value="">-- Select --</option>
               ${options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
             </select>
           `;
-                    break;
+                                break;
 
-                case 'multi-select':
-                    const opts = q.options || [];
-                    inputHtml = `
+                            case 'multi-select':
+                                const opts = q.options || [];
+                                inputHtml = `
             <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem; background: var(--bg-tertiary);">
               ${opts.map(opt => `
                 <label style="display: block; padding: 0.5rem; opacity: 0.6;">
@@ -268,81 +317,81 @@
               `).join('')}
             </div>
           `;
-                    break;
+                                break;
 
-                default:
-                    inputHtml = `<input type="text" class="form-input" placeholder="Preview - No input allowed" disabled>`;
-            }
+                            default:
+                                inputHtml = `<input type="text" class="form-input" placeholder="Preview - No input allowed" disabled>`;
+                        }
 
-            return `
+                        return `
         <div class="form-group">
           <label class="form-label ${requiredLabel}">${q.label}</label>
           ${metaTags}
           ${inputHtml}
         </div>
       `;
-        }
+                    }
 
-        function renderNavigation() {
-            const container = document.getElementById('section-nav-container');
-            container.innerHTML = sections.map((section, index) => `
+                    function renderNavigation() {
+                        const container = document.getElementById('section-nav-container');
+                        container.innerHTML = sections.map((section, index) => `
         <div class="section-nav-item" data-section="${index}">
           <span>${section.id}. ${section.name}</span>
           <span>${section.questions.length} Q</span>
         </div>
       `).join('');
 
-            document.querySelectorAll('.section-nav-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    const sectionIndex = parseInt(item.dataset.section);
-                    showSection(sectionIndex);
-                });
-            });
-        }
+                        document.querySelectorAll('.section-nav-item').forEach(item => {
+                            item.addEventListener('click', () => {
+                                const sectionIndex = parseInt(item.dataset.section);
+                                showSection(sectionIndex);
+                            });
+                        });
+                    }
 
-        function showSection(index) {
-            currentSection = index;
+                    function showSection(index) {
+                        currentSection = index;
 
-            // Hide all sections
-            document.querySelectorAll('.section-content').forEach(el => {
-                el.classList.remove('active');
-            });
+                        // Hide all sections
+                        document.querySelectorAll('.section-content').forEach(el => {
+                            el.classList.remove('active');
+                        });
 
-            // Show current section
-            document.getElementById(`section-${index}`).classList.add('active');
+                        // Show current section
+                        document.getElementById(`section-${index}`).classList.add('active');
 
-            // Update navigation
-            document.querySelectorAll('.section-nav-item').forEach((el, i) => {
-                el.classList.toggle('active', i === index);
-            });
+                        // Update navigation
+                        document.querySelectorAll('.section-nav-item').forEach((el, i) => {
+                            el.classList.toggle('active', i === index);
+                        });
 
-            // Update buttons
-            document.getElementById('prev-btn').disabled = index === 0;
-            document.getElementById('next-btn').textContent = index === sections.length - 1 ? 'End of Survey' : 'Next →';
-            document.getElementById('next-btn').disabled = index === sections.length - 1;
+                        // Update buttons
+                        document.getElementById('prev-btn').disabled = index === 0;
+                        document.getElementById('next-btn').textContent = index === sections.length - 1 ? 'End of Survey' : 'Next →';
+                        document.getElementById('next-btn').disabled = index === sections.length - 1;
 
-            // Scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+                        // Scroll to top
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
 
-        document.getElementById('prev-btn').addEventListener('click', () => {
-            if (currentSection > 0) {
-                showSection(currentSection - 1);
-            }
-        });
+                    document.getElementById('prev-btn').addEventListener('click', () => {
+                        if (currentSection > 0) {
+                            showSection(currentSection - 1);
+                        }
+                    });
 
-        document.getElementById('next-btn').addEventListener('click', () => {
-            if (currentSection < sections.length - 1) {
-                showSection(currentSection + 1);
-            }
-        });
+                    document.getElementById('next-btn').addEventListener('click', () => {
+                        if (currentSection < sections.length - 1) {
+                            showSection(currentSection + 1);
+                        }
+                    });
 
-        function showAlert(message, type) {
-            const container = document.getElementById('alert-container');
-            container.innerHTML = `<div class="alert alert-${type} fade-in">${message}</div>`;
-            setTimeout(() => { container.innerHTML = ''; }, 3000);
-        }
-    </script>
+                    function showAlert(message, type) {
+                        const container = document.getElementById('alert-container');
+                        container.innerHTML = `<div class="alert alert-${type} fade-in">${message}</div>`;
+                        setTimeout(() => { container.innerHTML = ''; }, 3000);
+                    }
+                </script>
 </body>
 
 </html>

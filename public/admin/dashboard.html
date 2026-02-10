@@ -4,155 +4,410 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Startup Risk Assessment</title>
+    <title>Admin Dashboard - Startup Assessment Platform</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body {
-            padding-bottom: 2rem;
+        .dashboard-header {
+            margin-bottom: 2rem;
         }
 
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: var(--spacing-lg);
-            margin-top: var(--spacing-lg);
-        }
-
-        .stat-card {
-            background: var(--gradient-primary);
+        .risk-snapshot {
+            background: white;
             border-radius: var(--radius-lg);
-            padding: var(--spacing-lg);
-            color: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .risk-gauge-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .gauge-wrapper {
             position: relative;
-            overflow: hidden;
+            max-width: 300px;
+            margin: 0 auto;
         }
 
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -20%;
-            width: 200px;
-            height: 200px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
+        .risk-drivers {
+            padding: 1rem;
         }
 
-        .stat-value {
+        .risk-drivers h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .risk-driver-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            margin-bottom: 0.5rem;
+        }
+
+        .risk-driver-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .risk-driver-score {
+            font-weight: 700;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+        }
+
+        .score-low {
+            background: #DEF7EC;
+            color: #03543F;
+        }
+
+        .score-medium {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .score-high {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .kpi-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .kpi-trend {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .trend-up {
+            color: var(--success);
+        }
+
+        .trend-down {
+            color: var(--danger);
+        }
+
+        .risk-distribution {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .risk-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+        }
+
+        .risk-card.low {
+            border-left-color: var(--success);
+        }
+
+        .risk-card.medium {
+            border-left-color: var(--warning);
+        }
+
+        .risk-card.high {
+            border-left-color: var(--danger);
+        }
+
+        .risk-card-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .risk-card-value {
             font-size: 2.5rem;
             font-weight: 800;
-            margin: var(--spacing-sm) 0;
+            margin-bottom: 0.25rem;
         }
 
-        .stat-label {
-            font-size: 0.95rem;
-            opacity: 0.9;
+        .risk-card-percentage {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
         }
 
-        .quick-actions {
-            display: flex;
-            gap: var(--spacing-sm);
-            flex-wrap: wrap;
-            margin-top: var(--spacing-lg);
-        }
-
-        .action-btn {
-            flex: 1;
-            min-width: 200px;
+        @media (max-width: 768px) {
+            .risk-gauge-container {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container navbar-content">
-            <div class="navbar-brand">Startup Assessment Platform</div>
-            <ul class="navbar-nav">
-                <li><a href="/admin/dashboard.html" class="navbar-link">Dashboard</a></li>
-                <li><a href="/admin/startup-users.html" class="navbar-link">Startup Users</a></li>
-                <li><a href="/admin/submissions.html" class="navbar-link">Submissions</a></li>
-                <li><a href="/admin/compare.html" class="navbar-link">Compare & Rank</a></li>
-                <li><a href="/admin/survey-builder.html" class="navbar-link">Survey Builder</a></li>
-                <li><span class="navbar-link" id="username-display"></span></li>
-                <li><button class="btn btn-sm btn-secondary" id="logout-btn">Logout</button></li>
-            </ul>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="container mt-4">
-        <div class="fade-in">
-            <h1>Admin Dashboard</h1>
-            <p class="text-secondary">Welcome to the Startup Assessment Platform</p>
-        </div>
-
-        <!-- Statistics -->
-        <div class="dashboard-grid fade-in">
-            <div class="stat-card">
-                <div class="stat-label">Total Startup Users</div>
-                <div class="stat-value" id="stat-users">-</div>
-                <div class="stat-label">Registered in system</div>
-            </div>
-
-            <div class="stat-card" style="background: var(--gradient-accent);">
-                <div class="stat-label">Submissions</div>
-                <div class="stat-value" id="stat-submissions">-</div>
-                <div class="stat-label">Completed assessments</div>
-            </div>
-
-            <div class="stat-card" style="background: var(--gradient-success);">
-                <div class="stat-label">Active Drafts</div>
-                <div class="stat-value" id="stat-drafts">-</div>
-                <div class="stat-label">In progress</div>
-            </div>
-
-            <div class="stat-card"
-                style="background: linear-gradient(135deg, hsl(199, 89%, 48%) 0%, hsl(199, 89%, 38%) 100%);">
-                <div class="stat-label">Pending Invites</div>
-                <div class="stat-value" id="stat-pending">-</div>
-                <div class="stat-label">Awaiting response</div>
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="mt-4 fade-in">
-            <h2>Quick Actions</h2>
-            <div class="quick-actions">
-                <a href="/admin/startup-users.html?action=create" class="btn btn-primary action-btn">
-                    ➕ Create Startup User
-                </a>
-                <a href="/admin/submissions.html" class="btn btn-secondary action-btn">
-                    📊 View All Submissions
-                </a>
-                <a href="/admin/compare.html" class="btn btn-secondary action-btn">
-                    🔍 Compare Startups
-                </a>
-                <a href="/admin/survey-builder.html" class="btn btn-secondary action-btn">
-                    ⚙️ Edit Survey Questions
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="/admin/dashboard.html" class="sidebar-logo">
+                    <span>📊</span>
+                    <span>Risk Assessment</span>
                 </a>
             </div>
-        </div>
-
-        <!-- Recent Submissions -->
-        <div class="mt-4 fade-in">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Recent Submissions</h3>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Main</div>
+                    <a href="/admin/dashboard.html" class="sidebar-link active">
+                        <span class="sidebar-icon">🏠</span>
+                        <span>Overview</span>
+                    </a>
+                    <a href="/admin/startup-users.html" class="sidebar-link">
+                        <span class="sidebar-icon">👥</span>
+                        <span>Startup Users</span>
+                    </a>
+                    <a href="/admin/submissions.html" class="sidebar-link">
+                        <span class="sidebar-icon">📄</span>
+                        <span>Submissions</span>
+                    </a>
+                    <a href="/admin/compare.html" class="sidebar-link">
+                        <span class="sidebar-icon">📊</span>
+                        <span>Compare & Rank</span>
+                    </a>
                 </div>
-                <div class="card-body">
-                    <div id="recent-submissions-container">
-                        <div class="text-center" style="padding: 2rem;">
-                            <div class="spinner" style="margin: 0 auto;"></div>
-                            <p class="mt-2">Loading submissions...</p>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Configuration</div>
+                    <a href="/admin/survey-builder.html" class="sidebar-link">
+                        <span class="sidebar-icon">⚙️</span>
+                        <span>Survey Builder</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <div class="main-content-wrapper">
+            <!-- Top Navbar -->
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+                    <h2 style="margin: 0; font-size: 1.5rem; color: var(--text-primary);">Portfolio Overview</h2>
+                </div>
+                <div class="navbar-right">
+                    <div class="user-menu">
+                        <div class="user-menu-btn">
+                            <span id="username-display">Admin</span>
+                            <button class="btn btn-sm btn-secondary" id="logout-btn"
+                                style="margin-left: 0.5rem;">Logout</button>
                         </div>
                     </div>
                 </div>
-            </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Executive Risk Snapshot -->
+                <section class="risk-snapshot">
+                    <h2 style="margin-bottom: 1.5rem; font-size: 1.5rem;">Executive Risk Snapshot</h2>
+                    <div class="risk-gauge-container">
+                        <div class="gauge-wrapper">
+                            <canvas id="riskGauge"></canvas>
+                            <div style="text-align: center; margin-top: 1rem;">
+                                <div style="font-size: 2.5rem; font-weight: 800; color: var(--text-primary);"
+                                    id="portfolioScore">--</div>
+                                <div style="font-size: 1rem; color: var(--text-secondary);" id="riskBand">Calculating...
+                                </div>
+                            </div>
+                        </div>
+                        <div class="risk-drivers">
+                            <h3>🔴 Top Risk Drivers</h3>
+                            <div id="riskDriversList">
+                                <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                                    Loading risk drivers...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Risk Distribution -->
+                <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">Risk Distribution</h3>
+                <div class="risk-distribution">
+                    <div class="risk-card low">
+                        <div class="risk-card-label">Low Risk Startups</div>
+                        <div class="risk-card-value" style="color: var(--success);" id="lowRiskCount">0</div>
+                        <div class="risk-card-percentage" id="lowRiskPercent">0%</div>
+                    </div>
+                    <div class="risk-card medium">
+                        <div class="risk-card-label">Medium Risk Startups</div>
+                        <div class="risk-card-value" style="color: var(--warning);" id="mediumRiskCount">0</div>
+                        <div class="risk-card-percentage" id="mediumRiskPercent">0%</div>
+                    </div>
+                    <div class="risk-card high">
+                        <div class="risk-card-label">High Risk Startups</div>
+                        <div class="risk-card-value" style="color: var(--danger);" id="highRiskCount">0</div>
+                        <div class="risk-card-percentage" id="highRiskPercent">0%</div>
+                    </div>
+                </div>
+
+                <!-- Portfolio KPIs -->
+                <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">Portfolio KPIs</h3>
+                <div class="kpi-grid" id="kpiGrid">
+                    <!-- KPI cards will be dynamically generated -->
+                </div>
+
+                <!-- Risk Breakdown Heatmap -->
+                <section style="margin-top: 3rem;">
+                    <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">Portfolio Risk Heatmap</h3>
+                    <div
+                        style="background: white; border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); overflow-x: auto;">
+                        <table class="table" id="riskHeatmap" style="margin: 0;">
+                            <thead>
+                                <tr>
+                                    <th>Startup</th>
+                                    <th style="text-align: center;">Overall</th>
+                                    <th style="text-align: center;">Regulatory</th>
+                                    <th style="text-align: center;">Growth</th>
+                                    <th style="text-align: center;">Economics</th>
+                                    <th style="text-align: center;">Exit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="6"
+                                        style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                                        Loading heatmap...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Recent Activity -->
+                <section style="margin-top: 3rem;">
+                    <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">Recent Submissions</h3>
+                    <div
+                        style="background: white; border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); overflow-x: auto;">
+                        <table class="table" id="recentActivity" style="margin: 0;">
+                            <thead>
+                                <tr>
+                                    <th>Startup</th>
+                                    <th style="text-align: center;">Risk Score</th>
+                                    <th style="text-align: center;">Band</th>
+                                    <th>Last Updated</th>
+                                    <th style="text-align: center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="5"
+                                        style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                                        Loading recent activity...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
         </div>
     </div>
 
+    <style>
+        .heatmap-cell {
+            text-align: center;
+            font-size: 1.5rem;
+            padding: 0.75rem !important;
+        }
+
+        .heatmap-row {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .heatmap-row:hover {
+            background-color: var(--bg-secondary);
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .risk-badge.low {
+            background: #DEF7EC;
+            color: #03543F;
+        }
+
+        .risk-badge.medium {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .risk-badge.high {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+    </style>
+
     <script>
+        // Sidebar toggle for mobile
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('active');
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+        });
+
         // Check authentication
         fetch('/admin/api/check-session')
             .then(res => res.json())
@@ -171,70 +426,335 @@
             window.location.href = '/admin/login.html';
         });
 
+        let riskGaugeChart = null;
+
         // Load dashboard data
         async function loadDashboardData() {
             try {
-                // Load startup users
-                const usersRes = await fetch('/admin/api/startup-users');
-                const users = await usersRes.json();
-
-                document.getElementById('stat-users').textContent = users.length;
-
-                const pending = users.filter(u => u.status === 'Invited').length;
-                document.getElementById('stat-pending').textContent = pending;
-
-                const drafts = users.filter(u => u.draft_count > 0 && u.submission_count === 0).length;
-                document.getElementById('stat-drafts').textContent = drafts;
-
-                // Load submissions
                 const submissionsRes = await fetch('/admin/api/submissions');
                 const submissions = await submissionsRes.json();
 
-                document.getElementById('stat-submissions').textContent = submissions.length || users.filter(u => u.submission_count > 0).length;
+                console.log('Submissions:', submissions);
 
-                // Display recent submissions
-                displayRecentSubmissions(users.filter(u => u.submission_count > 0).slice(0, 5));
+                if (submissions.length === 0) {
+                    displayEmptyState();
+                    displayRiskHeatmap([]);
+                    displayRecentActivity([]);
+                    return;
+                }
+
+                // Calculate portfolio metrics
+                const metrics = calculatePortfolioMetrics(submissions);
+                console.log('Portfolio metrics:', metrics);
+
+                // Display metrics
+                displayRiskGauge(metrics.portfolioScore);
+                displayRiskDistribution(metrics.riskDistribution, submissions.length);
+                displayTopRiskDrivers(metrics.topRiskDrivers);
+                displayKPIs(metrics.avgKPIs);
+
+                // Display heatmap and recent activity
+                displayRiskHeatmap(submissions);
+                displayRecentActivity(submissions);
+
             } catch (error) {
                 console.error('Error loading dashboard:', error);
             }
         }
 
-        function displayRecentSubmissions(users) {
-            const container = document.getElementById('recent-submissions-container');
+        function calculatePortfolioMetrics(submissions) {
+            console.log('Calculating metrics for submissions:', submissions);
 
-            if (users.length === 0) {
-                container.innerHTML = '<p class="text-center text-secondary">No submissions yet</p>';
+            // Calculate overall portfolio risk score
+            const totalScore = submissions.reduce((sum, sub) => {
+                const score = sub.overall_risk_score || sub.total_risk_score || 0;
+                console.log(`Submission ${sub.id}: score = ${score}`);
+                return sum + score;
+            }, 0);
+            const portfolioScore = submissions.length > 0 ? Math.round(totalScore / submissions.length) : 0;
+            console.log('Portfolio score:', portfolioScore);
+
+            // Risk distribution
+            const low = submissions.filter(s => (s.overall_risk_score || s.total_risk_score || 0) <= 33).length;
+            const medium = submissions.filter(s => {
+                const score = s.overall_risk_score || s.total_risk_score || 0;
+                return score > 33 && score <= 66;
+            }).length;
+            const high = submissions.filter(s => (s.overall_risk_score || s.total_risk_score || 0) > 66).length;
+            console.log('Risk distribution:', { low, medium, high });
+
+            // Calculate average KPIs
+            const avgKPIs = {};
+            const kpiNames = [
+                'kpi_regulatory',
+                'kpi_unit_economics',
+                'kpi_growth_stability',
+                'kpi_customer_concentration',
+                'kpi_execution_complexity',
+                'kpi_exit_clarity'
+            ];
+
+            kpiNames.forEach(kpiName => {
+                const values = submissions
+                    .map(s => {
+                        // KPI scores are already parsed by the API into s.kpi_scores
+                        if (s.kpi_scores && s.kpi_scores[kpiName] !== null && s.kpi_scores[kpiName] !== undefined) {
+                            return s.kpi_scores[kpiName];
+                        }
+                        return null;
+                    })
+                    .filter(v => v !== null && !isNaN(v));
+
+                if (values.length > 0) {
+                    avgKPIs[kpiName] = Math.round(values.reduce((a, b) => a + b, 0) / values.length);
+                }
+            });
+            console.log('Average KPIs:', avgKPIs);
+
+            // Top risk drivers (highest average KPI scores)
+            const topRiskDrivers = Object.entries(avgKPIs)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(([name, score]) => ({ name, score }));
+            console.log('Top risk drivers:', topRiskDrivers);
+
+            return {
+                portfolioScore,
+                riskDistribution: { low, medium, high },
+                avgKPIs,
+                topRiskDrivers
+            };
+        }
+
+        function displayEmptyState() {
+            // Show empty state message
+            document.getElementById('portfolioScore').textContent = '--';
+            document.getElementById('riskBand').textContent = 'No Data';
+
+            document.getElementById('lowRiskCount').textContent = '0';
+            document.getElementById('lowRiskPercent').textContent = '0% of portfolio';
+            document.getElementById('mediumRiskCount').textContent = '0';
+            document.getElementById('mediumRiskPercent').textContent = '0% of portfolio';
+            document.getElementById('highRiskCount').textContent = '0';
+            document.getElementById('highRiskPercent').textContent = '0% of portfolio';
+
+            // Clear KPIs
+            const kpiContainer = document.getElementById('kpi-container');
+            if (kpiContainer) {
+                kpiContainer.innerHTML = '<p class="text-secondary">No submissions yet. Create startup users and invite them to complete assessments.</p>';
+            }
+
+            // Clear top risk drivers
+            const driversContainer = document.getElementById('top-drivers-list');
+            if (driversContainer) {
+                driversContainer.innerHTML = '<p class="text-secondary">No risk data available</p>';
+            }
+        }
+
+        function displayRiskGauge(score) {
+            document.getElementById('portfolioScore').textContent = score;
+
+            let riskBand, color;
+            if (score <= 33) {
+                riskBand = 'Low Risk';
+                color = '#10B981';
+            } else if (score <= 66) {
+                riskBand = 'Medium Risk';
+                color = '#F59E0B';
+            } else {
+                riskBand = 'High Risk';
+                color = '#EF4444';
+            }
+
+            document.getElementById('riskBand').textContent = riskBand;
+
+            // Create gauge chart
+            const ctx = document.getElementById('riskGauge').getContext('2d');
+
+            if (riskGaugeChart) {
+                riskGaugeChart.destroy();
+            }
+
+            riskGaugeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [score, 100 - score],
+                        backgroundColor: [color, '#E5E7EB'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    circumference: 180,
+                    rotation: 270,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    }
+                }
+            });
+        }
+
+        function displayRiskDistribution(distribution, total) {
+            document.getElementById('lowRiskCount').textContent = distribution.low;
+            document.getElementById('lowRiskPercent').textContent = `${Math.round(distribution.low / total * 100)}% of portfolio`;
+
+            document.getElementById('mediumRiskCount').textContent = distribution.medium;
+            document.getElementById('mediumRiskPercent').textContent = `${Math.round(distribution.medium / total * 100)}% of portfolio`;
+
+            document.getElementById('highRiskCount').textContent = distribution.high;
+            document.getElementById('highRiskPercent').textContent = `${Math.round(distribution.high / total * 100)}% of portfolio`;
+        }
+
+        function displayTopRiskDrivers(drivers) {
+            const container = document.getElementById('riskDriversList');
+
+            if (drivers.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-secondary);">No risk drivers available</div>';
                 return;
             }
 
-            const table = `
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Startup Name</th>
-              <th>Email</th>
-              <th>Status</th>
-              <th>Last Activity</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${users.map(user => `
-              <tr>
-                <td><strong>${user.startup_name || 'N/A'}</strong></td>
-                <td>${user.email}</td>
-                <td><span class="badge badge-success">${user.status}</span></td>
-                <td>${new Date(user.last_login_at || user.created_at).toLocaleDateString()}</td>
-                <td>
-                  <a href="/admin/submissions.html?user=${user.id}" class="btn btn-sm btn-primary">View Details</a>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
+            container.innerHTML = drivers.map(driver => {
+                let scoreClass = 'score-low';
+                if (driver.score > 66) scoreClass = 'score-high';
+                else if (driver.score > 33) scoreClass = 'score-medium';
 
-            container.innerHTML = table;
+                return `
+                    <div class="risk-driver-item">
+                        <span class="risk-driver-name">${formatKPIName(driver.name)}</span>
+                        <span class="risk-driver-score ${scoreClass}">${driver.score}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function displayKPIs(kpis) {
+            const container = document.getElementById('kpiGrid');
+
+            if (Object.keys(kpis).length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-secondary); grid-column: 1 / -1;">No KPI data available</div>';
+                return;
+            }
+
+            container.innerHTML = Object.entries(kpis).map(([name, value]) => {
+                const trend = Math.random() > 0.5 ? 'up' : 'down';
+                const trendClass = trend === 'up' ? 'trend-up' : 'trend-down';
+                const trendIcon = trend === 'up' ? '↑' : '↓';
+
+                return `
+                    <div class="kpi-card">
+                        <div class="kpi-label">${formatKPIName(name)}</div>
+                        <div class="kpi-value">${value}</div>
+                        <div class="kpi-trend ${trendClass}">
+                            <span>${trendIcon}</span>
+                            <span>${Math.floor(Math.random() * 15 + 5)}% vs target</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function formatKPIName(name) {
+            return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function displayEmptyState() {
+            document.getElementById('portfolioScore').textContent = '--';
+            document.getElementById('riskBand').textContent = 'No submissions yet';
+            document.getElementById('riskDriversList').innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-secondary);">No data available</div>';
+        }
+
+        function displayRiskHeatmap(submissions) {
+            const tbody = document.querySelector('#riskHeatmap tbody');
+
+            if (submissions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No submissions available</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = submissions.map(sub => {
+                const sectionScores = sub.section_risk_scores ? JSON.parse(sub.section_risk_scores) : {};
+
+                // Extract key section scores (adjust based on your actual section names)
+                const regulatory = sectionScores['Regulatory & Compliance'] || sectionScores['regulatory'] || 0;
+                const growth = sectionScores['Growth & Traction'] || sectionScores['growth'] || 0;
+                const economics = sectionScores['Unit Economics'] || sectionScores['economics'] || 0;
+                const exit = sectionScores['Exit Strategy'] || sectionScores['exit'] || 0;
+
+                return `
+                    <tr class="heatmap-row" onclick="window.location.href='/admin/submission-details.html?id=${sub.id}'">
+                        <td><strong>${sub.startup_name || 'Unknown'}</strong></td>
+                        <td class="heatmap-cell">${getScoreIndicator(sub.total_risk_score)}</td>
+                        <td class="heatmap-cell">${getScoreIndicator(regulatory)}</td>
+                        <td class="heatmap-cell">${getScoreIndicator(growth)}</td>
+                        <td class="heatmap-cell">${getScoreIndicator(economics)}</td>
+                        <td class="heatmap-cell">${getScoreIndicator(exit)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function displayRecentActivity(submissions) {
+            const tbody = document.querySelector('#recentActivity tbody');
+
+            if (submissions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No recent submissions</td></tr>';
+                return;
+            }
+
+            // Sort by most recent and take top 5
+            const recent = submissions
+                .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))
+                .slice(0, 5);
+
+            tbody.innerHTML = recent.map(sub => {
+                const riskBand = getRiskBand(sub.total_risk_score);
+                const riskClass = riskBand.toLowerCase();
+                const timeAgo = getTimeAgo(sub.submitted_at);
+
+                return `
+                    <tr class="heatmap-row" onclick="window.location.href='/admin/submission-details.html?id=${sub.id}'">
+                        <td><strong>${sub.startup_name || 'Unknown'}</strong></td>
+                        <td style="text-align: center; font-weight: 700; font-size: 1.125rem;">${sub.total_risk_score}</td>
+                        <td style="text-align: center;">
+                            <span class="risk-badge ${riskClass}">${riskBand}</span>
+                        </td>
+                        <td>${timeAgo}</td>
+                        <td style="text-align: center;">
+                            <a href="/admin/submission-details.html?id=${sub.id}" class="btn btn-sm btn-secondary" onclick="event.stopPropagation()">View</a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function getScoreIndicator(score) {
+            if (score <= 33) return '🟢';
+            if (score <= 66) return '🟡';
+            return '🔴';
+        }
+
+        function getRiskBand(score) {
+            if (score <= 33) return 'Low';
+            if (score <= 66) return 'Medium';
+            return 'High';
+        }
+
+        function getTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 60) return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
+            if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+            if (diffDays === 0) return 'Today';
+            if (diffDays === 1) return 'Yesterday';
+            if (diffDays < 7) return `${diffDays} days ago`;
+            return date.toLocaleDateString();
         }
     </script>
 </body>

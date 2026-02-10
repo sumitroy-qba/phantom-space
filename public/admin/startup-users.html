@@ -9,150 +9,262 @@
 </head>
 
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container navbar-content">
-            <div class="navbar-brand">Startup Assessment Platform</div>
-            <ul class="navbar-nav">
-                <li><a href="/admin/dashboard.html" class="navbar-link">Dashboard</a></li>
-                <li><a href="/admin/startup-users.html" class="navbar-link">Startup Users</a></li>
-                <li><a href="/admin/submissions.html" class="navbar-link">Submissions</a></li>
-                <li><a href="/admin/compare.html" class="navbar-link">Compare & Rank</a></li>
-                <li><a href="/admin/survey-builder.html" class="navbar-link">Survey Builder</a></li>
-                <li><span class="navbar-link" id="username-display"></span></li>
-                <li><button class="btn btn-sm btn-secondary" id="logout-btn">Logout</button></li>
-            </ul>
-        </div>
-    </nav>
-
-    <div class="container mt-4">
-        <div class="flex justify-between items-center mb-3">
-            <div>
-                <h1>Startup Users</h1>
-                <p class="text-secondary">Manage startup user accounts and invitations</p>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="/admin/dashboard.html" class="sidebar-logo">
+                    <span>📊</span>
+                    <span>Risk Assessment</span>
+                </a>
             </div>
-            <button class="btn btn-primary" id="create-user-btn">➕ Create New User</button>
-        </div>
-
-        <div id="alert-container"></div>
-
-        <!-- Create User Modal -->
-        <div id="create-modal" class="hidden"
-            style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center;">
-            <div class="card" style="width: 100%; max-width: 600px; margin: 1rem;">
-                <div class="card-header">
-                    <h3 class="card-title">Create Startup User</h3>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Main</div>
+                    <a href="/admin/dashboard.html" class="sidebar-link">
+                        <span class="sidebar-icon">🏠</span>
+                        <span>Overview</span>
+                    </a>
+                    <a href="/admin/startup-users.html" class="sidebar-link active">
+                        <span class="sidebar-icon">👥</span>
+                        <span>Startup Users</span>
+                    </a>
+                    <a href="/admin/submissions.html" class="sidebar-link">
+                        <span class="sidebar-icon">📄</span>
+                        <span>Submissions</span>
+                    </a>
+                    <a href="/admin/compare.html" class="sidebar-link">
+                        <span class="sidebar-icon">📊</span>
+                        <span>Compare & Rank</span>
+                    </a>
                 </div>
-                <form id="create-user-form">
-                    <div class="form-group">
-                        <label for="email" class="form-label required">Email</label>
-                        <input type="email" id="email" class="form-input" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="startup_name" class="form-label">Startup Name</label>
-                        <input type="text" id="startup_name" class="form-input">
-                    </div>
-                    <div class="form-group">
-                        <label for="contact_name" class="form-label">Contact Name</label>
-                        <input type="text" id="contact_name" class="form-input">
-                    </div>
-                    <div class="flex gap-2">
-                        <button type="submit" class="btn btn-primary">Create & Generate Code</button>
-                        <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Invite Details Modal -->
-        <div id="invite-modal" class="hidden"
-            style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center;">
-            <div class="card" style="width: 100%; max-width: 600px; margin: 1rem;">
-                <div class="card-header">
-                    <h3 class="card-title">Invite Details</h3>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Configuration</div>
+                    <a href="/admin/survey-builder.html" class="sidebar-link">
+                        <span class="sidebar-icon">⚙️</span>
+                        <span>Survey Builder</span>
+                    </a>
                 </div>
-                <div id="invite-details"></div>
-                <button class="btn btn-secondary mt-3" id="close-invite-btn">Close</button>
-            </div>
-        </div>
+            </nav>
+        </aside>
 
-        <!-- Users Table -->
-        <div class="card fade-in">
-            <div id="users-container">
-                <div class="text-center" style="padding: 2rem;">
-                    <div class="spinner" style="margin: 0 auto;"></div>
-                    <p class="mt-2">Loading users...</p>
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <div class="main-content-wrapper">
+            <!-- Top Navbar -->
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+                    <h2 style="margin: 0; font-size: 1.5rem; color: var(--text-primary);">Startup Users</h2>
                 </div>
-            </div>
-        </div>
-    </div>
+                <div class="navbar-right">
+                    <div class="user-menu">
+                        <div class="user-menu-btn">
+                            <span id="username-display">Admin</span>
+                            <button class="btn btn-sm btn-secondary" id="logout-btn"
+                                style="margin-left: 0.5rem;">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </header>
 
-    <script>
-        // Check auth
-        fetch('/admin/api/check-session')
-            .then(res => res.json())
-            .then(data => {
-                if (!data.authenticated) {
-                    window.location.href = '/admin/login.html';
-                } else {
-                    document.getElementById('username-display').textContent = data.username;
-                    loadUsers();
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="flex justify-between items-center mb-3">
+                    <div>
+                        <p class="text-secondary">Manage startup user accounts and invitations</p>
+                    </div>
+                    <button class="btn btn-primary" id="create-user-btn">➕ Create New User</button>
+                </div>
+
+                <!-- Filter Tabs -->
+                <div class="mb-3">
+                    <div class="btn-group" role="group" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button class="btn btn-sm filter-btn" data-filter="all">All Users</button>
+                        <button class="btn btn-sm filter-btn" data-filter="invited">Pending Invites</button>
+                        <button class="btn btn-sm filter-btn" data-filter="active">Active</button>
+                        <button class="btn btn-sm filter-btn" data-filter="submitted">Submitted</button>
+                        <button class="btn btn-sm filter-btn" data-filter="disabled">Disabled</button>
+                    </div>
+                </div>
+
+                <div id="alert-container"></div>
+
+                <!-- Create User Modal -->
+                <div id="create-modal" class="hidden"
+                    style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center;">
+                    <div class="card" style="width: 100%; max-width: 600px; margin: 1rem;">
+                        <div class="card-header">
+                            <h3 class="card-title">Create Startup User</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="create-user-form">
+                                <div class="form-group">
+                                    <label for="email" class="form-label required">Email</label>
+                                    <input type="email" id="email" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="startup_name" class="form-label">Startup Name</label>
+                                    <input type="text" id="startup_name" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label for="contact_name" class="form-label">Contact Name</label>
+                                    <input type="text" id="contact_name" class="form-input">
+                                </div>
+                                <div class="flex gap-2">
+                                    <button type="submit" class="btn btn-primary">Create & Generate Code</button>
+                                    <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invite Details Modal -->
+                <div id="invite-modal" class="hidden"
+                    style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center;">
+                    <div class="card" style="width: 100%; max-width: 600px; margin: 1rem;">
+                        <div class="card-header">
+                            <h3 class="card-title">Invite Details</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="invite-details"></div>
+                            <button class="btn btn-secondary mt-3" id="close-invite-btn">Close</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Table -->
+                <div class="card fade-in">
+                    <div id="users-container">
+                        <div class="text-center" style="padding: 2rem;">
+                            <div class="spinner" style="margin: 0 auto;"></div>
+                            <p class="mt-2">Loading users...</p>
+                        </div>
+                    </div>
+                </div>
+        </div>
+
+        <script>
+            // Check auth
+            fetch('/admin/api/check-session')
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.authenticated) {
+                        window.location.href = '/admin/login.html';
+                    } else {
+                        document.getElementById('username-display').textContent = data.username;
+                        loadUsers();
+                    }
+                });
+
+            document.getElementById('logout-btn').addEventListener('click', async () => {
+                await fetch('/admin/api/logout', { method: 'POST' });
+                window.location.href = '/admin/login.html';
+            });
+
+            // Filter state
+            let currentFilter = 'all';
+            let allUsers = [];
+
+            // Get filter from URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const filterParam = urlParams.get('filter');
+            if (filterParam) {
+                currentFilter = filterParam;
+            }
+
+            // Filter button handlers
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const filter = btn.dataset.filter;
+                    currentFilter = filter;
+
+                    // Update URL without reload
+                    const url = new URL(window.location);
+                    if (filter === 'all') {
+                        url.searchParams.delete('filter');
+                    } else {
+                        url.searchParams.set('filter', filter);
+                    }
+                    window.history.pushState({}, '', url);
+
+                    // Update active button
+                    updateActiveFilter();
+
+                    // Re-display with filter
+                    displayUsers(allUsers);
+                });
+            });
+
+            function updateActiveFilter() {
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    if (btn.dataset.filter === currentFilter) {
+                        btn.classList.remove('btn-secondary');
+                        btn.classList.add('btn-primary');
+                    } else {
+                        btn.classList.remove('btn-primary');
+                        btn.classList.add('btn-secondary');
+                    }
+                });
+            }
+
+            // Modal controls
+            document.getElementById('create-user-btn').addEventListener('click', () => {
+                const modal = document.getElementById('create-modal');
+                modal.classList.remove('hidden');
+                modal.style.display = 'flex';
+            });
+
+            document.getElementById('cancel-btn').addEventListener('click', () => {
+                const modal = document.getElementById('create-modal');
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+                document.getElementById('create-user-form').reset();
+            });
+
+            document.getElementById('close-invite-btn').addEventListener('click', () => {
+                const modal = document.getElementById('invite-modal');
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+            });
+
+            // Create user form
+            document.getElementById('create-user-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const email = document.getElementById('email').value;
+                const startup_name = document.getElementById('startup_name').value;
+                const contact_name = document.getElementById('contact_name').value;
+
+                try {
+                    const res = await fetch('/admin/api/startup-users', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, startup_name, contact_name })
+                    });
+
+                    const data = await res.json();
+
+                    if (res.ok) {
+                        document.getElementById('create-modal').classList.add('hidden');
+                        document.getElementById('create-user-form').reset();
+
+                        // Show invite details
+                        showInviteDetails(data);
+                        loadUsers();
+                    } else {
+                        showAlert(data.error || 'Failed to create user', 'danger');
+                    }
+                } catch (error) {
+                    showAlert('An error occurred', 'danger');
                 }
             });
 
-        document.getElementById('logout-btn').addEventListener('click', async () => {
-            await fetch('/admin/api/logout', { method: 'POST' });
-            window.location.href = '/admin/login.html';
-        });
-
-        // Modal controls
-        document.getElementById('create-user-btn').addEventListener('click', () => {
-            document.getElementById('create-modal').classList.remove('hidden');
-        });
-
-        document.getElementById('cancel-btn').addEventListener('click', () => {
-            document.getElementById('create-modal').classList.add('hidden');
-            document.getElementById('create-user-form').reset();
-        });
-
-        document.getElementById('close-invite-btn').addEventListener('click', () => {
-            document.getElementById('invite-modal').classList.add('hidden');
-        });
-
-        // Create user form
-        document.getElementById('create-user-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const email = document.getElementById('email').value;
-            const startup_name = document.getElementById('startup_name').value;
-            const contact_name = document.getElementById('contact_name').value;
-
-            try {
-                const res = await fetch('/admin/api/startup-users', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, startup_name, contact_name })
-                });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    document.getElementById('create-modal').classList.add('hidden');
-                    document.getElementById('create-user-form').reset();
-
-                    // Show invite details
-                    showInviteDetails(data);
-                    loadUsers();
-                } else {
-                    showAlert(data.error || 'Failed to create user', 'danger');
-                }
-            } catch (error) {
-                showAlert('An error occurred', 'danger');
-            }
-        });
-
-        function showInviteDetails(data) {
-            const details = `
+            function showInviteDetails(data) {
+                const details = `
         <div class="alert alert-success">User created successfully!</div>
         <div class="form-group">
           <label class="form-label">One-Time Code</label>
@@ -173,37 +285,71 @@
         </div>
       `;
 
-            document.getElementById('invite-details').innerHTML = details;
-            document.getElementById('invite-modal').classList.remove('hidden');
-        }
-
-        window.copyToClipboard = function (inputId) {
-            const input = document.getElementById(inputId);
-            input.select();
-            document.execCommand('copy');
-            showAlert('Copied to clipboard!', 'success');
-        };
-
-        async function loadUsers() {
-            try {
-                const res = await fetch('/admin/api/startup-users');
-                const users = await res.json();
-
-                displayUsers(users);
-            } catch (error) {
-                document.getElementById('users-container').innerHTML = '<p class="text-center text-danger">Failed to load users</p>';
-            }
-        }
-
-        function displayUsers(users) {
-            const container = document.getElementById('users-container');
-
-            if (users.length === 0) {
-                container.innerHTML = '<p class="text-center text-secondary" style="padding: 2rem;">No users yet. Create your first startup user!</p>';
-                return;
+                document.getElementById('invite-details').innerHTML = details;
+                const modal = document.getElementById('invite-modal');
+                modal.classList.remove('hidden');
+                modal.style.display = 'flex';
             }
 
-            const table = `
+            window.copyToClipboard = function (inputId) {
+                const input = document.getElementById(inputId);
+                input.select();
+                document.execCommand('copy');
+                showAlert('Copied to clipboard!', 'success');
+            };
+
+            async function loadUsers() {
+                console.log('Loading users...');
+                try {
+                    const res = await fetch('/admin/api/startup-users');
+                    console.log('Response status:', res.status);
+
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+
+                    const users = await res.json();
+                    console.log('Users loaded:', users.length, users);
+
+                    allUsers = users;
+                    updateActiveFilter();
+                    displayUsers(allUsers);
+                } catch (error) {
+                    console.error('Error loading users:', error);
+                    document.getElementById('users-container').innerHTML = `
+                    <div style="padding: 2rem; text-align: center;">
+                        <p class="text-danger">Failed to load users</p>
+                        <p class="text-secondary">${error.message}</p>
+                        <button class="btn btn-primary mt-2" onclick="loadUsers()">Retry</button>
+                    </div>
+                `;
+                }
+            }
+
+            function displayUsers(users) {
+                const container = document.getElementById('users-container');
+
+                // Apply filter
+                let filteredUsers = users;
+                if (currentFilter !== 'all') {
+                    const statusMap = {
+                        'invited': 'Invited',
+                        'active': 'Active',
+                        'submitted': 'Submitted',
+                        'disabled': 'Disabled'
+                    };
+                    const targetStatus = statusMap[currentFilter];
+                    filteredUsers = users.filter(u => u.status === targetStatus);
+                }
+
+                console.log(`Displaying ${filteredUsers.length} users (filter: ${currentFilter})`);
+
+                if (filteredUsers.length === 0) {
+                    container.innerHTML = `<div class="card-body"><p class="text-center text-secondary">No users found with filter: ${currentFilter}</p></div>`;
+                    return;
+                }
+
+                const table = `
         <table class="table">
           <thead>
             <tr>
@@ -216,7 +362,7 @@
             </tr>
           </thead>
           <tbody>
-            ${users.map(user => `
+            ${filteredUsers.map(user => `
               <tr>
                 <td><strong>${user.email}</strong></td>
                 <td>${user.startup_name || '-'}</td>
@@ -237,64 +383,82 @@
         </table>
       `;
 
-            container.innerHTML = table;
-        }
+                container.innerHTML = table;
+            }
 
-        function getStatusBadge(status) {
-            const badges = {
-                'Invited': 'badge-info',
-                'Active': 'badge-success',
-                'Submitted': 'badge-primary',
-                'Locked': 'badge-warning',
-                'Disabled': 'badge-danger'
+            function getStatusBadge(status) {
+                const badges = {
+                    'Invited': 'badge-info',
+                    'Active': 'badge-success',
+                    'Submitted': 'badge-primary',
+                    'Locked': 'badge-warning',
+                    'Disabled': 'badge-danger'
+                };
+                return `<span class="badge ${badges[status] || 'badge-secondary'}">${status}</span>`;
+            }
+
+            window.resendInvite = async function (userId) {
+                if (!confirm('Regenerate and resend invite code?')) return;
+
+                try {
+                    const res = await fetch(`/admin/api/startup-users/${userId}/resend`, { method: 'POST' });
+                    const data = await res.json();
+
+                    if (res.ok) {
+                        showInviteDetails(data);
+                    } else {
+                        showAlert(data.error || 'Failed to resend invite', 'danger');
+                    }
+                } catch (error) {
+                    showAlert('An error occurred', 'danger');
+                }
             };
-            return `<span class="badge ${badges[status] || 'badge-secondary'}">${status}</span>`;
-        }
 
-        window.resendInvite = async function (userId) {
-            if (!confirm('Regenerate and resend invite code?')) return;
+            window.toggleStatus = async function (userId, currentStatus) {
+                const newStatus = currentStatus === 'Disabled' ? 'Active' : 'Disabled';
 
-            try {
-                const res = await fetch(`/admin/api/startup-users/${userId}/resend`, { method: 'POST' });
-                const data = await res.json();
+                try {
+                    const res = await fetch(`/admin/api/startup-users/${userId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: newStatus })
+                    });
 
-                if (res.ok) {
-                    showInviteDetails(data);
-                } else {
-                    showAlert(data.error || 'Failed to resend invite', 'danger');
+                    if (res.ok) {
+                        showAlert('Status updated successfully', 'success');
+                        loadUsers();
+                    } else {
+                        showAlert('Failed to update status', 'danger');
+                    }
+                } catch (error) {
+                    showAlert('An error occurred', 'danger');
                 }
-            } catch (error) {
-                showAlert('An error occurred', 'danger');
+            };
+
+            function showAlert(message, type) {
+                const container = document.getElementById('alert-container');
+                container.innerHTML = `<div class="alert alert-${type} fade-in">${message}</div>`;
+                setTimeout(() => { container.innerHTML = ''; }, 3000);
             }
-        };
 
-        window.toggleStatus = async function (userId, currentStatus) {
-            const newStatus = currentStatus === 'Disabled' ? 'Active' : 'Disabled';
+            // Sidebar toggle for mobile
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
 
-            try {
-                const res = await fetch(`/admin/api/startup-users/${userId}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: newStatus })
-                });
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('active');
+            });
 
-                if (res.ok) {
-                    showAlert('Status updated successfully', 'success');
-                    loadUsers();
-                } else {
-                    showAlert('Failed to update status', 'danger');
-                }
-            } catch (error) {
-                showAlert('An error occurred', 'danger');
-            }
-        };
-
-        function showAlert(message, type) {
-            const container = document.getElementById('alert-container');
-            container.innerHTML = `<div class="alert alert-${type} fade-in">${message}</div>`;
-            setTimeout(() => { container.innerHTML = ''; }, 3000);
-        }
-    </script>
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('active');
+            });
+        </script>
+        </main>
+    </div>
+    </div>
 </body>
 
 </html>
