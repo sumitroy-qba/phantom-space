@@ -74,6 +74,51 @@
             <main class="main-content">
                 <p class="text-secondary mb-3">View and analyze all submitted risk assessments</p>
 
+                <!-- Filters -->
+                <!-- Filters -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="filters-container"
+                            style="display: flex; gap: 2rem; align-items: flex-end; flex-wrap: wrap;">
+                            <!-- Risk Band Filter -->
+                            <div style="position: relative;">
+                                <label for="filterRiskBand"
+                                    style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.875rem; color: var(--text-secondary);">Risk
+                                    Band</label>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <select id="filterRiskBand" class="form-control"
+                                        style="min-width: 160px; padding: 0.6rem; border-color: #E5E7EB;">
+                                        <option value="">All Bands</option>
+                                        <option value="Low">Low Risk</option>
+                                        <option value="Medium">Medium Risk</option>
+                                        <option value="High">High Risk</option>
+                                    </select>
+                                    <button id="clearRiskBand" class="btn btn-sm btn-outline-secondary"
+                                        style="padding: 0.4rem 0.8rem; font-size: 0.8rem;"
+                                        title="Clear Filter">✕</button>
+                                </div>
+                            </div>
+
+                            <!-- Risk Score Range Filter -->
+                            <div>
+                                <label
+                                    style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.875rem; color: var(--text-secondary);">Risk
+                                    Score Range</label>
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <input type="number" id="filterMinScore" class="form-control" placeholder="Min"
+                                        style="width: 90px; padding: 0.6rem; border-color: #E5E7EB;" min="0" max="100">
+                                    <span class="text-secondary" style="font-weight: 500;">-</span>
+                                    <input type="number" id="filterMaxScore" class="form-control" placeholder="Max"
+                                        style="width: 90px; padding: 0.6rem; border-color: #E5E7EB;" min="0" max="100">
+                                    <button id="clearScoreRange" class="btn btn-sm btn-outline-secondary"
+                                        style="padding: 0.4rem 0.8rem; font-size: 0.8rem; margin-left: 0.5rem;"
+                                        title="Clear Range">✕</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="card-body">
                         <table class="table">
@@ -134,12 +179,31 @@
             window.location.href = '/admin/login.html';
         });
 
+        let allSubmissions = [];
+
         async function loadSubmissions() {
             try {
                 const response = await fetch('/admin/api/submissions');
-                const submissions = await response.json();
+                allSubmissions = await response.json();
 
-                displaySubmissions(submissions);
+                // Check for URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                const riskBandParam = urlParams.get('riskBand');
+                const minScoreParam = urlParams.get('minScore');
+                const maxScoreParam = urlParams.get('maxScore');
+
+                if (riskBandParam) {
+                    document.getElementById('filterRiskBand').value = riskBandParam;
+                }
+                if (minScoreParam) {
+                    document.getElementById('filterMinScore').value = minScoreParam;
+                }
+                if (maxScoreParam) {
+                    document.getElementById('filterMaxScore').value = maxScoreParam;
+                }
+
+                filterSubmissions();
+
             } catch (error) {
                 console.error('Error loading submissions:', error);
                 document.getElementById('submissions-table').innerHTML =
@@ -147,11 +211,44 @@
             }
         }
 
+        function filterSubmissions() {
+            const riskBand = document.getElementById('filterRiskBand').value;
+            const minScore = document.getElementById('filterMinScore').value;
+            const maxScore = document.getElementById('filterMaxScore').value;
+
+            const filtered = allSubmissions.filter(sub => {
+                let matchesBand = true;
+                let matchesScore = true;
+                const score = sub.total_risk_score;
+
+                // Determine risk band of the submission
+                let subBand = 'High';
+                if (score <= 33) subBand = 'Low';
+                else if (score <= 66) subBand = 'Medium';
+
+                // Filter by Band
+                if (riskBand && riskBand !== '') {
+                    // Match "Low" with "Low", "Low Risk" with "Low", etc.
+                    // The dropdown values are Low, Medium, High.
+                    // The calculated subBand is Low, Medium, High.
+                    matchesBand = subBand === riskBand;
+                }
+
+                // Filter by Score Range
+                if (minScore && score < parseFloat(minScore)) matchesScore = false;
+                if (maxScore && score > parseFloat(maxScore)) matchesScore = false;
+
+                return matchesBand && matchesScore;
+            });
+
+            displaySubmissions(filtered);
+        }
+
         function displaySubmissions(submissions) {
             const tbody = document.getElementById('submissions-table');
 
             if (submissions.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">No submissions found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">No submissions found matching filters</td></tr>';
                 return;
             }
 
@@ -174,6 +271,44 @@
                 `;
             }).join('');
         }
+
+        // Event Listeners for Filters
+        // Event Listeners for Filters
+        const filterRiskBand = document.getElementById('filterRiskBand');
+        const filterMinScore = document.getElementById('filterMinScore');
+        const filterMaxScore = document.getElementById('filterMaxScore');
+
+        function updateFilters() {
+            const riskBand = filterRiskBand.value;
+            const minScore = filterMinScore.value;
+            const maxScore = filterMaxScore.value;
+
+            const url = new URL(window.location);
+            if (riskBand) url.searchParams.set('riskBand', riskBand); else url.searchParams.delete('riskBand');
+            if (minScore) url.searchParams.set('minScore', minScore); else url.searchParams.delete('minScore');
+            if (maxScore) url.searchParams.set('maxScore', maxScore); else url.searchParams.delete('maxScore');
+
+            window.history.pushState({}, '', url);
+
+            filterSubmissions();
+        }
+
+        // Auto-apply on change
+        filterRiskBand.addEventListener('change', updateFilters);
+        filterMinScore.addEventListener('input', updateFilters); // Use input for real-time, or change for on-blur
+        filterMaxScore.addEventListener('input', updateFilters);
+
+        // Clear buttons
+        document.getElementById('clearRiskBand').addEventListener('click', () => {
+            filterRiskBand.value = '';
+            updateFilters();
+        });
+
+        document.getElementById('clearScoreRange').addEventListener('click', () => {
+            filterMinScore.value = '';
+            filterMaxScore.value = '';
+            updateFilters();
+        });
     </script>
 </body>
 

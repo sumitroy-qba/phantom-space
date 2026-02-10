@@ -271,21 +271,24 @@
                 <!-- Risk Distribution -->
                 <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">Risk Distribution</h3>
                 <div class="risk-distribution">
-                    <div class="risk-card low">
+                    <a href="/admin/submissions.html?riskBand=Low" class="risk-card low"
+                        style="text-decoration: none; cursor: pointer;">
                         <div class="risk-card-label">Low Risk Startups</div>
                         <div class="risk-card-value" style="color: var(--success);" id="lowRiskCount">0</div>
                         <div class="risk-card-percentage" id="lowRiskPercent">0%</div>
-                    </div>
-                    <div class="risk-card medium">
+                    </a>
+                    <a href="/admin/submissions.html?riskBand=Medium" class="risk-card medium"
+                        style="text-decoration: none; cursor: pointer;">
                         <div class="risk-card-label">Medium Risk Startups</div>
                         <div class="risk-card-value" style="color: var(--warning);" id="mediumRiskCount">0</div>
                         <div class="risk-card-percentage" id="mediumRiskPercent">0%</div>
-                    </div>
-                    <div class="risk-card high">
+                    </a>
+                    <a href="/admin/submissions.html?riskBand=High" class="risk-card high"
+                        style="text-decoration: none; cursor: pointer;">
                         <div class="risk-card-label">High Risk Startups</div>
                         <div class="risk-card-value" style="color: var(--danger);" id="highRiskCount">0</div>
                         <div class="risk-card-percentage" id="highRiskPercent">0%</div>
-                    </div>
+                    </a>
                 </div>
 
                 <!-- Portfolio Metrics -->
