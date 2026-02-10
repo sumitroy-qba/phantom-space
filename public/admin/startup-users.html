@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Startup Users - Admin</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <div class="navbar-brand">Risk Assessment Platform</div>
+            <ul class="navbar-nav">
+                <li><a href="/admin/dashboard.html" class="navbar-link">Dashboard</a></li>
+                <li><a href="/admin/startup-users.html" class="navbar-link">Startup Users</a></li>
+                <li><a href="/admin/submissions.html" class="navbar-link">Submissions</a></li>
+                <li><a href="/admin/compare.html" class="navbar-link">Compare & Rank</a></li>
+                <li><a href="/admin/survey-builder.html" class="navbar-link">Survey Builder</a></li>
+                <li><span class="navbar-link" id="username-display"></span></li>
+                <li><button class="btn btn-sm btn-secondary" id="logout-btn">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="flex justify-between items-center mb-3">
+            <div>
+                <h1>Startup Users</h1>
+                <p class="text-secondary">Manage startup user accounts and invitations</p>
+            </div>
+            <button class="btn btn-primary" id="create-user-btn">➕ Create New User</button>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <!-- Create User Modal -->
+        <div id="create-modal" class="hidden"
+            style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+            <div class="card" style="width: 100%; max-width: 600px; margin: 1rem;">
+                <div class="card-header">
+                    <h3 class="card-title">Create Startup User</h3>
+                </div>
+                <form id="create-user-form">
+                    <div class="form-group">
+                        <label for="email" class="form-label required">Email</label>
+                        <input type="email" id="email" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="startup_name" class="form-label">Startup Name</label>
+                        <input type="text" id="startup_name" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_name" class="form-label">Contact Name</label>
+                        <input type="text" id="contact_name" class="form-input">
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" class="btn btn-primary">Create & Generate Code</button>
+                        <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Invite Details Modal -->
+        <div id="invite-modal" class="hidden"
+            style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+            <div class="card" style="width: 100%; max-width: 600px; margin: 1rem;">
+                <div class="card-header">
+                    <h3 class="card-title">Invite Details</h3>
+                </div>
+                <div id="invite-details"></div>
+                <button class="btn btn-secondary mt-3" id="close-invite-btn">Close</button>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="card fade-in">
+            <div id="users-container">
+                <div class="text-center" style="padding: 2rem;">
+                    <div class="spinner" style="margin: 0 auto;"></div>
+                    <p class="mt-2">Loading users...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check auth
+        fetch('/admin/api/check-session')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.authenticated) {
+                    window.location.href = '/admin/login.html';
+                } else {
+                    document.getElementById('username-display').textContent = data.username;
+                    loadUsers();
+                }
+            });
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await fetch('/admin/api/logout', { method: 'POST' });
+            window.location.href = '/admin/login.html';
+        });
+
+        // Modal controls
+        document.getElementById('create-user-btn').addEventListener('click', () => {
+            document.getElementById('create-modal').classList.remove('hidden');
+        });
+
+        document.getElementById('cancel-btn').addEventListener('click', () => {
+            document.getElementById('create-modal').classList.add('hidden');
+            document.getElementById('create-user-form').reset();
+        });
+
+        document.getElementById('close-invite-btn').addEventListener('click', () => {
+            document.getElementById('invite-modal').classList.add('hidden');
+        });
+
+        // Create user form
+        document.getElementById('create-user-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const startup_name = document.getElementById('startup_name').value;
+            const contact_name = document.getElementById('contact_name').value;
+
+            try {
+                const res = await fetch('/admin/api/startup-users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, startup_name, contact_name })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    document.getElementById('create-modal').classList.add('hidden');
+                    document.getElementById('create-user-form').reset();
+
+                    // Show invite details
+                    showInviteDetails(data);
+                    loadUsers();
+                } else {
+                    showAlert(data.error || 'Failed to create user', 'danger');
+                }
+            } catch (error) {
+                showAlert('An error occurred', 'danger');
+            }
+        });
+
+        function showInviteDetails(data) {
+            const details = `
+        <div class="alert alert-success">User created successfully!</div>
+        <div class="form-group">
+          <label class="form-label">One-Time Code</label>
+          <div class="flex gap-2">
+            <input type="text" class="form-input" value="${data.code}" readonly id="code-input">
+            <button class="btn btn-secondary" onclick="copyToClipboard('code-input')">Copy</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Invite Link</label>
+          <div class="flex gap-2">
+            <input type="text" class="form-input" value="${data.inviteLink}" readonly id="link-input">
+            <button class="btn btn-secondary" onclick="copyToClipboard('link-input')">Copy</button>
+          </div>
+        </div>
+        <div class="alert alert-info">
+          <strong>Note:</strong> Share this code and link with the startup user. The code expires on ${new Date(data.expiresAt).toLocaleDateString()}.
+        </div>
+      `;
+
+            document.getElementById('invite-details').innerHTML = details;
+            document.getElementById('invite-modal').classList.remove('hidden');
+        }
+
+        window.copyToClipboard = function (inputId) {
+            const input = document.getElementById(inputId);
+            input.select();
+            document.execCommand('copy');
+            showAlert('Copied to clipboard!', 'success');
+        };
+
+        async function loadUsers() {
+            try {
+                const res = await fetch('/admin/api/startup-users');
+                const users = await res.json();
+
+                displayUsers(users);
+            } catch (error) {
+                document.getElementById('users-container').innerHTML = '<p class="text-center text-danger">Failed to load users</p>';
+            }
+        }
+
+        function displayUsers(users) {
+            const container = document.getElementById('users-container');
+
+            if (users.length === 0) {
+                container.innerHTML = '<p class="text-center text-secondary" style="padding: 2rem;">No users yet. Create your first startup user!</p>';
+                return;
+            }
+
+            const table = `
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Startup Name</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Last Login</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${users.map(user => `
+              <tr>
+                <td><strong>${user.email}</strong></td>
+                <td>${user.startup_name || '-'}</td>
+                <td>${getStatusBadge(user.status)}</td>
+                <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                <td>${user.last_login_at ? new Date(user.last_login_at).toLocaleDateString() : '-'}</td>
+                <td>
+                  <div class="flex gap-1">
+                    <button class="btn btn-sm btn-secondary" onclick="resendInvite(${user.id})">Resend</button>
+                    <button class="btn btn-sm btn-secondary" onclick="toggleStatus(${user.id}, '${user.status}')">
+                      ${user.status === 'Disabled' ? 'Enable' : 'Disable'}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+
+            container.innerHTML = table;
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                'Invited': 'badge-info',
+                'Active': 'badge-success',
+                'Submitted': 'badge-primary',
+                'Locked': 'badge-warning',
+                'Disabled': 'badge-danger'
+            };
+            return `<span class="badge ${badges[status] || 'badge-secondary'}">${status}</span>`;
+        }
+
+        window.resendInvite = async function (userId) {
+            if (!confirm('Regenerate and resend invite code?')) return;
+
+            try {
+                const res = await fetch(`/admin/api/startup-users/${userId}/resend`, { method: 'POST' });
+                const data = await res.json();
+
+                if (res.ok) {
+                    showInviteDetails(data);
+                } else {
+                    showAlert(data.error || 'Failed to resend invite', 'danger');
+                }
+            } catch (error) {
+                showAlert('An error occurred', 'danger');
+            }
+        };
+
+        window.toggleStatus = async function (userId, currentStatus) {
+            const newStatus = currentStatus === 'Disabled' ? 'Active' : 'Disabled';
+
+            try {
+                const res = await fetch(`/admin/api/startup-users/${userId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (res.ok) {
+                    showAlert('Status updated successfully', 'success');
+                    loadUsers();
+                } else {
+                    showAlert('Failed to update status', 'danger');
+                }
+            } catch (error) {
+                showAlert('An error occurred', 'danger');
+            }
+        };
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = `<div class="alert alert-${type} fade-in">${message}</div>`;
+            setTimeout(() => { container.innerHTML = ''; }, 3000);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submissions - Admin</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <div class="navbar-brand">Risk Assessment Platform</div>
+            <ul class="navbar-nav">
+                <li><a href="/admin/dashboard.html" class="navbar-link">Dashboard</a></li>
+                <li><a href="/admin/startup-users.html" class="navbar-link">Startup Users</a></li>
+                <li><a href="/admin/submissions.html" class="navbar-link">Submissions</a></li>
+                <li><a href="/admin/compare.html" class="navbar-link">Compare & Rank</a></li>
+                <li><a href="/admin/survey-builder.html" class="navbar-link">Survey Builder</a></li>
+                <li><span class="navbar-link" id="username-display"></span></li>
+                <li><button class="btn btn-sm btn-secondary" id="logout-btn">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1>Submissions</h1>
+        <p class="text-secondary">View and analyze startup risk assessments</p>
+
+        <div class="card mt-3 fade-in">
+            <div id="submissions-container">
+                <div class="text-center" style="padding: 2rem;">
+                    <div class="spinner" style="margin: 0 auto;"></div>
+                    <p class="mt-2">Loading submissions...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        fetch('/admin/api/check-session')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.authenticated) {
+                    window.location.href = '/admin/login.html';
+                } else {
+                    document.getElementById('username-display').textContent = data.username;
+                    loadSubmissions();
+                }
+            });
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await fetch('/admin/api/logout', { method: 'POST' });
+            window.location.href = '/admin/login.html';
+        });
+
+        async function loadSubmissions() {
+            try {
+                const res = await fetch('/admin/api/submissions');
+                const submissions = await res.json();
+                displaySubmissions(submissions);
+            } catch (error) {
+                document.getElementById('submissions-container').innerHTML =
+                    '<p class="text-center text-danger">Failed to load submissions</p>';
+            }
+        }
+
+        function displaySubmissions(submissions) {
+            const container = document.getElementById('submissions-container');
+
+            if (submissions.length === 0) {
+                container.innerHTML = '<p class="text-center text-secondary" style="padding: 2rem;">No submissions yet</p>';
+                return;
+            }
+
+            const table = `
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Startup Name</th>
+              <th>Email</th>
+              <th>Risk Score</th>
+              <th>Risk Band</th>
+              <th>Submitted</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${submissions.map(sub => `
+              <tr>
+                <td><strong>${sub.startup_name || 'N/A'}</strong></td>
+                <td>${sub.email}</td>
+                <td><strong>${sub.total_risk_score.toFixed(1)}</strong></td>
+                <td>${getRiskBadge(sub.risk_band)}</td>
+                <td>${new Date(sub.submitted_at).toLocaleDateString()}</td>
+                <td>
+                  <button class="btn btn-sm btn-primary" onclick="viewDetails(${sub.id})">View Details</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+
+            container.innerHTML = table;
+        }
+
+        function getRiskBadge(band) {
+            const badges = {
+                'Low Risk': 'badge-success',
+                'Medium Risk': 'badge-warning',
+                'High Risk': 'badge-danger'
+            };
+            return `<span class="badge ${badges[band] || 'badge-secondary'}">${band}</span>`;
+        }
+
+        window.viewDetails = function (id) {
+            window.location.href = `/admin/submission-details.html?id=${id}`;
+        };
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Startup Login - Risk Assessment Platform</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, hsl(240, 15%, 8%) 0%, hsl(260, 20%, 12%) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%);
+            top: -200px;
+            left: -200px;
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .login-title {
+            font-size: 2.5rem;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--spacing-sm);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-box container-sm">
+            <div class="login-header fade-in">
+                <h1 class="login-title">Startup Portal</h1>
+                <p class="login-subtitle" style="color: var(--text-secondary); font-size: 1.1rem;">
+                    Investment Risk Assessment
+                </p>
+            </div>
+
+            <div class="card-glass fade-in">
+                <div id="alert-container"></div>
+
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="email" class="form-label required">Email</label>
+                        <input type="email" id="email" class="form-input" required placeholder="your@email.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="code" class="form-label required">One-Time Code</label>
+                        <input type="text" id="code" class="form-input" required
+                            placeholder="Enter your 8-character code" maxlength="8" style="text-transform: uppercase;">
+                        <p class="form-help">Enter the code provided by your investment team</p>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+                        Access Assessment
+                    </button>
+                </form>
+
+                <div style="margin-top: var(--spacing-lg); text-align: center; color: var(--text-tertiary);">
+                    <p>
+                        <a href="/admin/login.html">Admin Login →</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if already logged in
+        fetch('/startup/api/check-session')
+            .then(res => res.json())
+            .then(data => {
+                if (data.authenticated) {
+                    if (data.status === 'Locked') {
+                        window.location.href = '/startup/results.html';
+                    } else {
+                        window.location.href = '/startup/assessment.html';
+                    }
+                }
+            });
+
+        // Check for token in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        if (token) {
+            // Auto-fill from token
+            try {
+                const decoded = atob(token);
+                const [email, code] = decoded.split(':');
+                if (email && code) {
+                    document.getElementById('email').value = email;
+                    document.getElementById('code').value = code;
+                }
+            } catch (e) {
+                console.error('Invalid token');
+            }
+        }
+
+        // Handle login
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const code = document.getElementById('code').value.toUpperCase();
+
+            const alertContainer = document.getElementById('alert-container');
+            alertContainer.innerHTML = '';
+
+            try {
+                const response = await fetch('/startup/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, code, token })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    alertContainer.innerHTML = `
+            <div class="alert alert-success fade-in">
+              Login successful! Loading your assessment...
+            </div>
+          `;
+                    setTimeout(() => {
+                        if (data.status === 'Locked') {
+                            window.location.href = '/startup/results.html';
+                        } else {
+                            window.location.href = '/startup/assessment.html';
+                        }
+                    }, 500);
+                } else {
+                    alertContainer.innerHTML = `
+            <div class="alert alert-danger fade-in">
+              ${data.error || 'Login failed. Please check your email and code.'}
+            </div>
+          `;
+                }
+            } catch (error) {
+                alertContainer.innerHTML = `
+          <div class="alert alert-danger fade-in">
+            An error occurred. Please try again.
+          </div>
+        `;
+            }
+        });
+
+        // Auto-uppercase code
+        document.getElementById('code').addEventListener('input', (e) => {
+            e.target.value = e.target.value.toUpperCase();
+        });
+    </script>
+</body>
+
+</html>

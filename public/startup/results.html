@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Results - Startup Portal</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .results-hero {
+            text-align: center;
+            padding: var(--spacing-xl) 0;
+            background: var(--gradient-primary);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--spacing-lg);
+            color: white;
+        }
+
+        .risk-score-display {
+            font-size: 5rem;
+            font-weight: 800;
+            line-height: 1;
+            margin: var(--spacing-md) 0;
+        }
+
+        .section-scores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-lg);
+        }
+
+        .section-score-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            transition: all var(--transition-base);
+        }
+
+        .section-score-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .score-bar {
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            margin-top: var(--spacing-sm);
+        }
+
+        .score-fill {
+            height: 100%;
+            transition: width var(--transition-slow);
+        }
+
+        .score-low {
+            background: var(--success);
+        }
+
+        .score-medium {
+            background: var(--warning);
+        }
+
+        .score-high {
+            background: var(--danger);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <div class="navbar-brand">Startup Risk Assessment</div>
+            <ul class="navbar-nav">
+                <li><span class="navbar-link" id="user-email"></span></li>
+                <li><button class="btn btn-sm btn-secondary" id="logout-btn">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="container-md">
+            <!-- Loading State -->
+            <div id="loading-container" class="text-center" style="padding: 4rem;">
+                <div class="spinner" style="margin: 0 auto;"></div>
+                <p class="mt-2">Loading your results...</p>
+            </div>
+
+            <!-- Results Content -->
+            <div id="results-container" class="hidden">
+                <!-- Hero Section -->
+                <div class="results-hero fade-in" id="results-hero">
+                    <h1>Your Risk Assessment Results</h1>
+                    <div class="risk-score-display" id="overall-score">--</div>
+                    <h2 id="risk-band">--</h2>
+                    <p style="font-size: 1.2rem; opacity: 0.9; max-width: 600px; margin: var(--spacing-md) auto;"
+                        id="decision">--</p>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-3 gap-3 mb-4 fade-in">
+                    <div class="card">
+                        <h4>Submitted</h4>
+                        <p class="text-secondary" id="submitted-date">--</p>
+                    </div>
+                    <div class="card">
+                        <h4>Assessment Version</h4>
+                        <p class="text-secondary">Version 1</p>
+                    </div>
+                    <div class="card">
+                        <h4>Status</h4>
+                        <span class="badge badge-success">Completed</span>
+                    </div>
+                </div>
+
+                <!-- Section Scores -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <h3 class="card-title">Section Risk Scores</h3>
+                        <p class="text-secondary">Breakdown by assessment section (0-100 scale, lower is better)</p>
+                    </div>
+                    <div class="section-scores-grid" id="section-scores">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- KPI Scores -->
+                <div class="card mt-4 fade-in">
+                    <div class="card-header">
+                        <h3 class="card-title">Key Risk Indicators (KPIs)</h3>
+                        <p class="text-secondary">Critical risk metrics for investment decision-making</p>
+                    </div>
+                    <div class="section-scores-grid" id="kpi-scores">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Next Steps -->
+                <div class="card mt-4 fade-in">
+                    <div class="card-header">
+                        <h3 class="card-title">Next Steps</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Your assessment has been submitted successfully and is now under review by the investment
+                            team.</p>
+                        <ul style="margin-left: 1.5rem; color: var(--text-secondary);">
+                            <li>The investment team will review your submission</li>
+                            <li>You may be contacted for additional information or clarification</li>
+                            <li>A final investment decision will be communicated to you</li>
+                            <li>This assessment is locked and cannot be edited</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication
+        fetch('/startup/api/check-session')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.authenticated) {
+                    window.location.href = '/startup/login.html';
+                } else {
+                    document.getElementById('user-email').textContent = data.email;
+                    loadResults();
+                }
+            });
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await fetch('/startup/api/logout', { method: 'POST' });
+            window.location.href = '/startup/login.html';
+        });
+
+        async function loadResults() {
+            try {
+                const res = await fetch('/startup/api/submission');
+                const submission = await res.json();
+
+                displayResults(submission);
+            } catch (error) {
+                document.getElementById('loading-container').innerHTML =
+                    '<div class="alert alert-danger">Failed to load results. Please contact support.</div>';
+            }
+        }
+
+        function displayResults(submission) {
+            // Update overall score
+            document.getElementById('overall-score').textContent = submission.total_risk_score.toFixed(1);
+            document.getElementById('risk-band').textContent = submission.risk_band;
+            document.getElementById('decision').textContent = submission.decision;
+            document.getElementById('submitted-date').textContent = new Date(submission.submitted_at).toLocaleDateString();
+
+            // Set hero color based on risk band
+            const hero = document.getElementById('results-hero');
+            if (submission.risk_band === 'Low Risk') {
+                hero.style.background = 'var(--gradient-success)';
+            } else if (submission.risk_band === 'Medium Risk') {
+                hero.style.background = 'linear-gradient(135deg, hsl(38, 92%, 50%) 0%, hsl(38, 92%, 40%) 100%)';
+            } else {
+                hero.style.background = 'var(--gradient-danger)';
+            }
+
+            // Display section scores
+            displaySectionScores(submission.section_scores);
+
+            // Display KPI scores
+            displayKPIScores(submission.kpi_scores);
+
+            // Show results
+            document.getElementById('loading-container').classList.add('hidden');
+            document.getElementById('results-container').classList.remove('hidden');
+        }
+
+        function displaySectionScores(scores) {
+            const container = document.getElementById('section-scores');
+
+            const sectionNames = {
+                'B': 'Product & Stage',
+                'C': 'Market & Geography',
+                'D': 'Regulatory & Compliance',
+                'E': 'IP',
+                'F': 'Unit Economics',
+                'G': 'Market Sizing',
+                'H': 'Revenue & Growth',
+                'I': 'Customer Contracts',
+                'JKL': 'Exit & Financial'
+            };
+
+            Object.keys(sectionNames).forEach(key => {
+                if (scores[key] !== undefined) {
+                    const score = scores[key];
+                    const scoreClass = score <= 30 ? 'score-low' : score <= 60 ? 'score-medium' : 'score-high';
+
+                    container.innerHTML += `
+            <div class="section-score-card">
+              <h4>${sectionNames[key]}</h4>
+              <div class="flex justify-between items-center mt-2">
+                <span class="text-secondary">Section ${key}</span>
+                <strong style="font-size: 1.5rem;">${score.toFixed(1)}</strong>
+              </div>
+              <div class="score-bar">
+                <div class="score-fill ${scoreClass}" style="width: ${score}%"></div>
+              </div>
+            </div>
+          `;
+                }
+            });
+        }
+
+        function displayKPIScores(kpis) {
+            const container = document.getElementById('kpi-scores');
+
+            const kpiNames = {
+                'kpi_regulatory': 'Regulatory Risk',
+                'kpi_unit_economics': 'Unit Economics',
+                'kpi_growth_stability': 'Growth Stability',
+                'kpi_customer_concentration': 'Customer Concentration',
+                'kpi_execution_complexity': 'Execution Complexity',
+                'kpi_exit_clarity': 'Exit Clarity'
+            };
+
+            Object.keys(kpiNames).forEach(key => {
+                if (kpis[key] !== undefined) {
+                    const score = kpis[key];
+                    const scoreClass = score <= 30 ? 'score-low' : score <= 60 ? 'score-medium' : 'score-high';
+
+                    container.innerHTML += `
+            <div class="section-score-card">
+              <h4>${kpiNames[key]}</h4>
+              <div class="flex justify-between items-center mt-2">
+                <span class="text-secondary">KPI</span>
+                <strong style="font-size: 1.5rem;">${score.toFixed(1)}</strong>
+              </div>
+              <div class="score-bar">
+                <div class="score-fill ${scoreClass}" style="width: ${score}%"></div>
+              </div>
+            </div>
+          `;
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

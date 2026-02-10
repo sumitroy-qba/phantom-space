@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login - Startup Risk Assessment Platform</title>
+  <meta name="description" content="Admin login for Startup Investment Risk Assessment Platform">
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, hsl(240, 15%, 8%) 0%, hsl(260, 20%, 12%) 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-container::before {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+      top: -200px;
+      right: -200px;
+      border-radius: 50%;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .login-container::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%);
+      bottom: -150px;
+      left: -150px;
+      border-radius: 50%;
+      animation: float 8s ease-in-out infinite reverse;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 450px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .login-title {
+      font-size: 2.5rem;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .login-subtitle {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+    }
+
+    .form-footer {
+      margin-top: var(--spacing-lg);
+      text-align: center;
+      color: var(--text-tertiary);
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-box container-sm">
+      <div class="login-header fade-in">
+        <h1 class="login-title">Admin Portal</h1>
+        <p class="login-subtitle">Startup Investment Risk Assessment Platform</p>
+      </div>
+
+      <div class="card-glass fade-in">
+        <div id="alert-container"></div>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label for="username" class="form-label required">Username</label>
+            <input 
+              type="text" 
+              id="username" 
+              name="username" 
+              class="form-input" 
+              required 
+              autocomplete="username"
+              placeholder="Enter your username"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="password" class="form-label required">Password</label>
+            <input 
+              type="password" 
+              id="password" 
+              name="password" 
+              class="form-input" 
+              required 
+              autocomplete="current-password"
+              placeholder="Enter your password"
+            >
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+            Sign In
+          </button>
+        </form>
+
+        <div class="form-footer">
+          <p>Default credentials: <strong>admin</strong> / <strong>admin123</strong></p>
+          <p class="mt-2">
+            <a href="/startup/login.html">Startup User Login →</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Check if already logged in
+    fetch('/admin/api/check-session')
+      .then(res => res.json())
+      .then(data => {
+        if (data.authenticated) {
+          window.location.href = '/admin/dashboard.html';
+        }
+      });
+
+    // Handle login form
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      
+      const alertContainer = document.getElementById('alert-container');
+      alertContainer.innerHTML = '';
+      
+      try {
+        const response = await fetch('/admin/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+          alertContainer.innerHTML = `
+            <div class="alert alert-success fade-in">
+              Login successful! Redirecting...
+            </div>
+          `;
+          setTimeout(() => {
+            window.location.href = '/admin/dashboard.html';
+          }, 500);
+        } else {
+          alertContainer.innerHTML = `
+            <div class="alert alert-danger fade-in">
+              ${data.error || 'Login failed. Please check your credentials.'}
+            </div>
+          `;
+        }
+      } catch (error) {
+        alertContainer.innerHTML = `
+          <div class="alert alert-danger fade-in">
+            An error occurred. Please try again.
+          </div>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>

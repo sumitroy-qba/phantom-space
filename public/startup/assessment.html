@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risk Assessment - Startup Portal</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        /* Professional Survey Platform Styling */
+        .section-nav {
+            position: sticky;
+            top: 70px;
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-nav h4 {
+            font-size: var(--text-base);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .section-nav-item {
+            padding: 0.75rem 1rem;
+            margin: 0.375rem 0;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            border: 1px solid transparent;
+        }
+
+        .section-nav-item:hover {
+            background: var(--bg-secondary);
+            border-color: var(--border);
+        }
+
+        .section-nav-item.active {
+            background: var(--primary);
+            color: white;
+            font-weight: var(--font-medium);
+            border-color: var(--primary);
+        }
+
+        .section-content {
+            display: none;
+            padding: var(--spacing-xl);
+        }
+
+        .section-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .section-content h2 {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .section-content>p {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xl);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Question Cards */
+        .form-group {
+            background: var(--bg-primary);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            margin-bottom: var(--spacing-lg);
+            transition: all 0.2s ease;
+        }
+
+        .form-group:hover {
+            border-color: var(--border-dark);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .form-group:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .form-label {
+            display: block;
+            font-size: var(--text-base);
+            font-weight: var(--font-medium);
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+            line-height: var(--leading-relaxed);
+        }
+
+        .form-label-required::after {
+            content: ' *';
+            color: var(--danger);
+            font-weight: var(--font-bold);
+        }
+
+        /* Progress Section */
+        .progress-section {
+            padding-top: var(--spacing-lg);
+            border-top: 1px solid var(--border);
+            margin-top: var(--spacing-lg);
+        }
+
+        .progress {
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-hover) 100%);
+            transition: width 0.4s ease;
+            border-radius: var(--radius-full);
+        }
+
+        .progress-text {
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-secondary);
+            margin-top: var(--spacing-sm);
+        }
+
+        /* Auto-save Indicator */
+        .auto-save-indicator {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 0.75rem 1.25rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            z-index: 100;
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-secondary);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-lg);
+            border-top: 2px solid var(--border);
+            background: var(--bg-secondary);
+            margin: var(--spacing-xl) calc(-1 * var(--spacing-xl)) calc(-1 * var(--spacing-lg));
+        }
+
+        /* Grid Layout */
+        .assessment-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: var(--spacing-xl);
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .assessment-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-nav {
+                position: relative;
+                top: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <div class="navbar-brand">Startup Risk Assessment</div>
+            <ul class="navbar-nav">
+                <li><span class="navbar-link" id="user-email"></span></li>
+                <li><button class="btn btn-sm btn-secondary" id="logout-btn">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="assessment-grid">
+            <!-- Section Navigation -->
+            <div>
+                <div class="section-nav">
+                    <h4>Sections</h4>
+                    <div id="section-nav-container"></div>
+
+                    <div class="progress-section">
+                        <div class="progress">
+                            <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+                        </div>
+                        <p class="text-center progress-text" id="progress-text">0% Complete</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div>
+                <div class="card fade-in">
+                    <div id="alert-container"></div>
+
+                    <form id="assessment-form">
+                        <!-- Sections will be dynamically loaded here -->
+                        <div id="sections-container"></div>
+
+                        <!-- Navigation Buttons -->
+                        <div class="nav-buttons">
+                            <div class="flex justify-between">
+                                <button type="button" class="btn btn-secondary" id="prev-btn" disabled>←
+                                    Previous</button>
+                                <div class="flex gap-2">
+                                    <button type="button" class="btn btn-secondary" id="save-draft-btn">💾 Save
+                                        Draft</button>
+                                    <button type="button" class="btn btn-primary" id="next-btn">Next →</button>
+                                    <button type="button" class="btn btn-success hidden" id="submit-btn">Submit
+                                        Assessment</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto-save indicator -->
+    <div class="auto-save-indicator hidden" id="auto-save-indicator">
+        <span id="save-status">Saved</span>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let currentSection = 0;
+        let sections = [];
+        let questions = [];
+        let answers = {};
+        let autoSaveTimer = null;
+
+        // Check authentication
+        fetch('/startup/api/check-session')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.authenticated) {
+                    window.location.href = '/startup/login.html';
+                } else if (data.status === 'Locked') {
+                    window.location.href = '/startup/results.html';
+                } else {
+                    currentUser = data;
+                    document.getElementById('user-email').textContent = data.email;
+                    loadAssessment();
+                }
+            });
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await fetch('/startup/api/logout', { method: 'POST' });
+            window.location.href = '/startup/login.html';
+        });
+
+        async function loadAssessment() {
+            try {
+                // Load survey
+                const surveyRes = await fetch('/startup/api/survey');
+                const survey = await surveyRes.json();
+                questions = survey.questions;
+
+                // Load draft
+                const draftRes = await fetch('/startup/api/draft');
+                const draft = await draftRes.json();
+                answers = draft.answers || {};
+
+                // Group questions by section
+                const sectionMap = {};
+                questions.forEach(q => {
+                    if (!sectionMap[q.section]) {
+                        sectionMap[q.section] = [];
+                    }
+                    sectionMap[q.section].push(q);
+                });
+
+                sections = Object.keys(sectionMap).sort().map(key => ({
+                    id: key,
+                    name: getSectionName(key),
+                    questions: sectionMap[key]
+                }));
+
+                renderSections();
+                renderNavigation();
+                showSection(0);
+                updateProgress();
+
+                // Start auto-save
+                startAutoSave();
+            } catch (error) {
+                showAlert('Failed to load assessment', 'danger');
+            }
+        }
+
+        function getSectionName(section) {
+            const names = {
+                'A': 'Basic Info',
+                'B': 'Offering & Product',
+                'C': 'Market & Geography',
+                'D': 'Regulatory & Compliance',
+                'E': 'IP',
+                'F': 'Unit Economics',
+                'G': 'Market Sizing',
+                'H': 'Revenue & Growth',
+                'I': 'Customer Contracts',
+                'J': 'Expense Plans',
+                'K': 'Exit Strategy',
+                'L': 'Self-Reported Risks'
+            };
+            return names[section] || section;
+        }
+
+        function renderSections() {
+            const container = document.getElementById('sections-container');
+
+            sections.forEach((section, index) => {
+                const sectionHtml = `
+          <div class="section-content" id="section-${index}">
+            <h2>${section.name}</h2>
+            <p class="text-secondary mb-3">Section ${section.id}</p>
+            ${section.questions.map(q => renderQuestion(q)).join('')}
+          </div>
+        `;
+                container.innerHTML += sectionHtml;
+            });
+
+            // Add event listeners
+            document.querySelectorAll('input, select, textarea').forEach(el => {
+                el.addEventListener('change', () => {
+                    saveAnswer(el.name, el.value);
+                    updateProgress();
+                });
+            });
+        }
+
+        function renderQuestion(q) {
+            const value = answers[q.label] || '';
+            const required = q.required ? 'required' : '';
+            const requiredLabel = q.required ? 'required' : '';
+
+            let inputHtml = '';
+
+            switch (q.type) {
+                case 'text':
+                case 'url':
+                case 'number':
+                    inputHtml = `<input type="${q.type}" name="${q.label}" class="form-input" value="${value}" ${required}>`;
+                    break;
+
+                case 'textarea':
+                    inputHtml = `<textarea name="${q.label}" class="form-textarea" ${required}>${value}</textarea>`;
+                    break;
+
+                case 'dropdown':
+                case 'radio':
+                    const options = q.options || [];
+                    inputHtml = `
+            <select name="${q.label}" class="form-select" ${required}>
+              <option value="">-- Select --</option>
+              ${options.map(opt => `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+            </select>
+          `;
+                    break;
+
+                case 'multi-select':
+                    const selectedValues = Array.isArray(value) ? value : [];
+                    const opts = q.options || [];
+                    inputHtml = `
+            <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;">
+              ${opts.map(opt => `
+                <label style="display: block; padding: 0.5rem;">
+                  <input type="checkbox" name="${q.label}" value="${opt}" ${selectedValues.includes(opt) ? 'checked' : ''}>
+                  ${opt}
+                </label>
+              `).join('')}
+            </div>
+          `;
+                    break;
+
+                default:
+                    inputHtml = `<input type="text" name="${q.label}" class="form-input" value="${value}" ${required}>`;
+            }
+
+            return `
+        <div class="form-group">
+          <label class="form-label ${requiredLabel}">${q.label}</label>
+          ${inputHtml}
+        </div>
+      `;
+        }
+
+        function renderNavigation() {
+            const container = document.getElementById('section-nav-container');
+            container.innerHTML = sections.map((section, index) => `
+        <div class="section-nav-item" data-section="${index}">
+          <span>${section.id}. ${section.name}</span>
+          <span id="section-status-${index}">○</span>
+        </div>
+      `).join('');
+
+            document.querySelectorAll('.section-nav-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const sectionIndex = parseInt(item.dataset.section);
+                    showSection(sectionIndex);
+                });
+            });
+        }
+
+        function showSection(index) {
+            currentSection = index;
+
+            // Hide all sections
+            document.querySelectorAll('.section-content').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Show current section
+            document.getElementById(`section-${index}`).classList.add('active');
+
+            // Update navigation
+            document.querySelectorAll('.section-nav-item').forEach((el, i) => {
+                el.classList.toggle('active', i === index);
+            });
+
+            // Update buttons
+            document.getElementById('prev-btn').disabled = index === 0;
+            document.getElementById('next-btn').classList.toggle('hidden', index === sections.length - 1);
+            document.getElementById('submit-btn').classList.toggle('hidden', index !== sections.length - 1);
+        }
+
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentSection > 0) {
+                showSection(currentSection - 1);
+            }
+        });
+
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (currentSection < sections.length - 1) {
+                showSection(currentSection + 1);
+            }
+        });
+
+        document.getElementById('save-draft-btn').addEventListener('click', () => {
+            saveDraft();
+        });
+
+        document.getElementById('submit-btn').addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to submit? You will not be able to edit after submission.')) {
+                return;
+            }
+
+            try {
+                const res = await fetch('/startup/api/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ answers })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    showAlert('Assessment submitted successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/startup/results.html';
+                    }, 1500);
+                } else {
+                    showAlert(data.error || 'Failed to submit', 'danger');
+                }
+            } catch (error) {
+                showAlert('An error occurred', 'danger');
+            }
+        });
+
+        function saveAnswer(name, value) {
+            // Handle multi-select
+            if (document.querySelectorAll(`input[name="${name}"]`).length > 1) {
+                const checkboxes = document.querySelectorAll(`input[name="${name}"]:checked`);
+                answers[name] = Array.from(checkboxes).map(cb => cb.value);
+            } else {
+                answers[name] = value;
+            }
+        }
+
+        async function saveDraft() {
+            try {
+                showSaveStatus('Saving...');
+
+                const res = await fetch('/startup/api/draft/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ answers, progress: { currentSection } })
+                });
+
+                if (res.ok) {
+                    showSaveStatus('Saved ✓');
+                } else {
+                    showSaveStatus('Save failed');
+                }
+            } catch (error) {
+                showSaveStatus('Save failed');
+            }
+        }
+
+        function startAutoSave() {
+            autoSaveTimer = setInterval(() => {
+                saveDraft();
+            }, 10000); // Every 10 seconds
+        }
+
+        function showSaveStatus(text) {
+            const indicator = document.getElementById('auto-save-indicator');
+            const status = document.getElementById('save-status');
+            status.textContent = text;
+            indicator.classList.remove('hidden');
+
+            setTimeout(() => {
+                indicator.classList.add('hidden');
+            }, 2000);
+        }
+
+        function updateProgress() {
+            const totalQuestions = questions.filter(q => q.required).length;
+            const answeredQuestions = questions.filter(q => q.required && answers[q.label]).length;
+            const progress = totalQuestions > 0 ? (answeredQuestions / totalQuestions) * 100 : 0;
+
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            document.getElementById('progress-text').textContent = `${Math.round(progress)}% Complete`;
+        }
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = `<div class="alert alert-${type} fade-in">${message}</div>`;
+            setTimeout(() => { container.innerHTML = ''; }, 3000);
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (autoSaveTimer) {
+                clearInterval(autoSaveTimer);
+            }
+        });
+    </script>
+</body>
+
+</html>

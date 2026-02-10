@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submission Details - Admin</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .detail-section {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .answer-grid {
+            display: grid;
+            gap: var(--spacing-md);
+        }
+
+        .answer-item {
+            background: var(--bg-tertiary);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            border-left: 3px solid var(--primary);
+        }
+
+        .answer-label {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .answer-value {
+            color: var(--text-secondary);
+        }
+
+        .score-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            text-align: center;
+        }
+
+        .score-value {
+            font-size: 2rem;
+            font-weight: 800;
+            margin: var(--spacing-sm) 0;
+        }
+
+        .hero-score {
+            background: var(--gradient-primary);
+            color: white;
+            padding: var(--spacing-xl);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .hero-score h1 {
+            font-size: 4rem;
+            margin: var(--spacing-md) 0;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <div class="navbar-brand">Risk Assessment Platform</div>
+            <ul class="navbar-nav">
+                <li><a href="/admin/dashboard.html" class="navbar-link">Dashboard</a></li>
+                <li><a href="/admin/startup-users.html" class="navbar-link">Startup Users</a></li>
+                <li><a href="/admin/submissions.html" class="navbar-link">Submissions</a></li>
+                <li><a href="/admin/compare.html" class="navbar-link">Compare & Rank</a></li>
+                <li><a href="/admin/survey-builder.html" class="navbar-link">Survey Builder</a></li>
+                <li><span class="navbar-link" id="username-display"></span></li>
+                <li><button class="btn btn-sm btn-secondary" id="logout-btn">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Loading State -->
+        <div id="loading-container" class="text-center" style="padding: 4rem;">
+            <div class="spinner" style="margin: 0 auto;"></div>
+            <p class="mt-2">Loading submission details...</p>
+        </div>
+
+        <!-- Content -->
+        <div id="content-container" class="hidden">
+            <div class="flex justify-between items-center mb-3">
+                <div>
+                    <h1 id="startup-name">Submission Details</h1>
+                    <p class="text-secondary" id="startup-email"></p>
+                </div>
+                <a href="/admin/submissions.html" class="btn btn-secondary">← Back to Submissions</a>
+            </div>
+
+            <!-- Overall Score Hero -->
+            <div class="hero-score fade-in" id="hero-section">
+                <h2>Overall Risk Score</h2>
+                <h1 id="overall-score">--</h1>
+                <h3 id="risk-band">--</h3>
+                <p style="font-size: 1.1rem; margin-top: var(--spacing-md); opacity: 0.9;" id="decision">--</p>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-3 gap-3 mb-4 fade-in">
+                <div class="card">
+                    <h4>Submitted</h4>
+                    <p class="text-secondary" id="submitted-date">--</p>
+                </div>
+                <div class="card">
+                    <h4>Survey Version</h4>
+                    <p class="text-secondary" id="survey-version">--</p>
+                </div>
+                <div class="card">
+                    <h4>Status</h4>
+                    <span class="badge badge-success">Completed</span>
+                </div>
+            </div>
+
+            <!-- Section Scores -->
+            <div class="card fade-in mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">Section Risk Scores</h3>
+                    <p class="text-secondary">Breakdown by assessment section</p>
+                </div>
+                <div class="grid grid-3 gap-3" id="section-scores">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- KPI Scores -->
+            <div class="card fade-in mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">Key Risk Indicators (KPIs)</h3>
+                    <p class="text-secondary">Critical risk metrics</p>
+                </div>
+                <div class="grid grid-3 gap-3" id="kpi-scores">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Detailed Answers by Section -->
+            <div class="card fade-in">
+                <div class="card-header">
+                    <h3 class="card-title">Assessment Answers</h3>
+                    <p class="text-secondary">Complete responses organized by section</p>
+                </div>
+                <div id="answers-container">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check auth
+        fetch('/admin/api/check-session')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.authenticated) {
+                    window.location.href = '/admin/login.html';
+                } else {
+                    document.getElementById('username-display').textContent = data.username;
+                    loadSubmission();
+                }
+            });
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await fetch('/admin/api/logout', { method: 'POST' });
+            window.location.href = '/admin/login.html';
+        });
+
+        // Get submission ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const submissionId = urlParams.get('id');
+
+        if (!submissionId) {
+            window.location.href = '/admin/submissions.html';
+        }
+
+        async function loadSubmission() {
+            try {
+                const res = await fetch(`/admin/api/submissions/${submissionId}`);
+
+                if (!res.ok) {
+                    throw new Error('Submission not found');
+                }
+
+                const submission = await res.json();
+                displaySubmission(submission);
+            } catch (error) {
+                document.getElementById('loading-container').innerHTML = `
+          <div class="alert alert-danger">
+            Failed to load submission. ${error.message}
+          </div>
+          <a href="/admin/submissions.html" class="btn btn-secondary mt-3">Back to Submissions</a>
+        `;
+            }
+        }
+
+        function displaySubmission(submission) {
+            // Header
+            document.getElementById('startup-name').textContent = submission.startup_name || 'Unnamed Startup';
+            document.getElementById('startup-email').textContent = submission.email;
+
+            // Overall score
+            document.getElementById('overall-score').textContent = submission.total_risk_score.toFixed(1);
+            document.getElementById('risk-band').textContent = submission.risk_band;
+            document.getElementById('decision').textContent = submission.decision;
+
+            // Set hero color based on risk band
+            const hero = document.getElementById('hero-section');
+            if (submission.risk_band === 'Low Risk') {
+                hero.style.background = 'var(--gradient-success)';
+            } else if (submission.risk_band === 'Medium Risk') {
+                hero.style.background = 'linear-gradient(135deg, hsl(38, 92%, 50%) 0%, hsl(38, 92%, 40%) 100%)';
+            } else {
+                hero.style.background = 'var(--gradient-danger)';
+            }
+
+            // Summary
+            document.getElementById('submitted-date').textContent = new Date(submission.submitted_at).toLocaleString();
+            document.getElementById('survey-version').textContent = `Version ${submission.survey_version_id}`;
+
+            // Section scores
+            displaySectionScores(submission.section_scores);
+
+            // KPI scores
+            displayKPIScores(submission.kpi_scores);
+
+            // Answers
+            displayAnswers(submission.answers, submission.questions);
+
+            // Show content
+            document.getElementById('loading-container').classList.add('hidden');
+            document.getElementById('content-container').classList.remove('hidden');
+        }
+
+        function displaySectionScores(scores) {
+            const container = document.getElementById('section-scores');
+
+            const sectionNames = {
+                'B': 'Product & Stage',
+                'C': 'Market & Geography',
+                'D': 'Regulatory & Compliance',
+                'E': 'IP',
+                'F': 'Unit Economics',
+                'G': 'Market Sizing',
+                'H': 'Revenue & Growth',
+                'I': 'Customer Contracts',
+                'JKL': 'Exit & Financial'
+            };
+
+            Object.keys(sectionNames).forEach(key => {
+                if (scores[key] !== undefined) {
+                    const score = scores[key];
+                    const scoreClass = score <= 30 ? 'success' : score <= 60 ? 'warning' : 'danger';
+
+                    container.innerHTML += `
+            <div class="score-card">
+              <h4>${sectionNames[key]}</h4>
+              <div class="score-value" style="color: var(--${scoreClass});">${score.toFixed(1)}</div>
+              <span class="badge badge-secondary">Section ${key}</span>
+            </div>
+          `;
+                }
+            });
+        }
+
+        function displayKPIScores(kpis) {
+            const container = document.getElementById('kpi-scores');
+
+            const kpiNames = {
+                'kpi_regulatory': 'Regulatory Risk',
+                'kpi_unit_economics': 'Unit Economics',
+                'kpi_growth_stability': 'Growth Stability',
+                'kpi_customer_concentration': 'Customer Concentration',
+                'kpi_execution_complexity': 'Execution Complexity',
+                'kpi_exit_clarity': 'Exit Clarity'
+            };
+
+            Object.keys(kpiNames).forEach(key => {
+                if (kpis[key] !== undefined) {
+                    const score = kpis[key];
+                    const scoreClass = score <= 30 ? 'success' : score <= 60 ? 'warning' : 'danger';
+
+                    container.innerHTML += `
+            <div class="score-card">
+              <h4>${kpiNames[key]}</h4>
+              <div class="score-value" style="color: var(--${scoreClass});">${score.toFixed(1)}</div>
+            </div>
+          `;
+                }
+            });
+        }
+
+        function displayAnswers(answers, questions) {
+            const container = document.getElementById('answers-container');
+
+            // Group questions by section
+            const sections = {};
+            questions.forEach(q => {
+                if (!sections[q.section]) sections[q.section] = [];
+                sections[q.section].push(q);
+            });
+
+            const sectionNames = {
+                'A': 'Basic Info',
+                'B': 'Offering & Product',
+                'C': 'Market & Geography',
+                'D': 'Regulatory & Compliance',
+                'E': 'IP (Patents/Trademarks)',
+                'F': 'Revenue Model & Unit Economics',
+                'G': 'Market Sizing',
+                'H': 'Revenue & Growth',
+                'I': 'Customer Contracts',
+                'J': '3-Year Expense Plans',
+                'K': 'Exit Strategy',
+                'L': 'Self-Reported Risks'
+            };
+
+            Object.keys(sections).sort().forEach(section => {
+                const sectionQuestions = sections[section];
+
+                let sectionHtml = `
+          <div class="detail-section">
+            <h4 style="color: var(--primary); margin-bottom: 1rem;">
+              Section ${section}: ${sectionNames[section]}
+            </h4>
+            <div class="answer-grid">
+        `;
+
+                sectionQuestions.forEach(q => {
+                    const answer = answers[q.label];
+                    if (answer !== undefined && answer !== null && answer !== '') {
+                        let displayValue = formatAnswer(answer);
+
+                        sectionHtml += `
+              <div class="answer-item">
+                <div class="answer-label">${q.label}</div>
+                <div class="answer-value">${displayValue}</div>
+              </div>
+            `;
+                    }
+                });
+
+                sectionHtml += `
+            </div>
+          </div>
+        `;
+
+                container.innerHTML += sectionHtml;
+            });
+        }
+
+        function formatAnswer(answer) {
+            if (Array.isArray(answer)) {
+                if (answer.length === 0) return '<em>None selected</em>';
+
+                // Check if it's growth data
+                if (answer[0] && answer[0].month) {
+                    return `
+            <table class="table" style="margin-top: 0.5rem;">
+              <thead>
+                <tr><th>Month</th><th>Growth Rate</th></tr>
+              </thead>
+              <tbody>
+                ${answer.map(item => `<tr><td>${item.month}</td><td>${item.rate}%</td></tr>`).join('')}
+              </tbody>
+            </table>
+          `;
+                }
+
+                // Check if it's contract data
+                if (answer[0] && answer[0].customer) {
+                    return `
+            <table class="table" style="margin-top: 0.5rem;">
+              <thead>
+                <tr><th>Customer</th><th>Value</th><th>Duration</th><th>Terms</th></tr>
+              </thead>
+              <tbody>
+                ${answer.map(item => `
+                  <tr>
+                    <td>${item.customer || 'N/A'}</td>
+                    <td>$${Number(item.value).toLocaleString()}</td>
+                    <td>${item.duration} months</td>
+                    <td>${item.terms || 'N/A'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+                }
+
+                return answer.join(', ');
+            }
+
+            if (typeof answer === 'object') {
+                // Expense allocation
+                return `
+          <table class="table" style="margin-top: 0.5rem;">
+            <thead>
+              <tr><th>Category</th><th>Percentage</th></tr>
+            </thead>
+            <tbody>
+              ${Object.keys(answer).map(key => `
+                <tr>
+                  <td>${key.charAt(0).toUpperCase() + key.slice(1)}</td>
+                  <td>${answer[key]}%</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+            }
+
+            // Check if it's a URL
+            if (typeof answer === 'string' && (answer.startsWith('http://') || answer.startsWith('https://'))) {
+                return `<a href="${answer}" target="_blank" style="color: var(--primary);">${answer}</a>`;
+            }
+
+            // Check if it's a long text
+            if (typeof answer === 'string' && answer.length > 200) {
+                return `<div style="white-space: pre-wrap;">${answer}</div>`;
+            }
+
+            return answer;
+        }
+    </script>
+</body>
+
+</html>
