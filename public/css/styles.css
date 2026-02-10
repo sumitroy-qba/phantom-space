@@ -804,12 +804,12 @@ input[type="radio"] {
     justify-content: center;
   }
 
-  }
+}
 
-  .table th,
-  .table td {
-    padding: 0.5rem;
-  }
+.table th,
+.table td {
+  padding: 0.5rem;
+}
 }
 
 /* ===== SIDEBAR NAVIGATION ===== */
@@ -993,7 +993,13 @@ input[type="radio"] {
     z-index: 998;
   }
 
+
   .sidebar-overlay.active {
     display: block;
   }
+}
+
+/* ===== UTILITY CLASSES ===== */
+.hidden {
+  display: none !important;
 }
